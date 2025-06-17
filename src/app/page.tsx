@@ -48,17 +48,23 @@ export default function LoginPage() {
 
 
             {/* Campo Senha com ícone */}
-            <div className="relative">
+            <div className="relative w-full">
               <input
                 type="password"
+                id="password"
                 placeholder="Password"
-                className="w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 py-3 pr-10 
-                            placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
-                style={{
-                  color: '#7471D9',             // cor do texto digitado
-                  WebkitTextFillColor: '#7471D9' // SAFARI e EDGE (webkit fallback)
-                }}
+                required
+                className="peer w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 pt-6 pb-2 
+                          text-[#7471D9] placeholder-transparent focus:border-[#a084ff] focus:outline-none"
               />
+              <label
+                htmlFor="password"
+                className="absolute left-3 -top-2.5 bg-[#1E1E2E] px-1 text-sm text-[#a0a0c0] transition-all 
+                          peer-placeholder-shown:top-[28%] peer-placeholder-shown:text-base peer-placeholder-shown:text-[#7471D9]
+                          peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[#a084ff]"
+              >
+                Password
+              </label>
               <Eye className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7471D9] cursor-pointer" />
             </div>
 
