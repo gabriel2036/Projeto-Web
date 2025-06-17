@@ -38,7 +38,7 @@ export default function LoginPage() {
               <label
                 htmlFor="email"
                 className="absolute left-3 -top-2.5 bg-[#1E1E2E] px-1 text-sm text-[#a0a0c0] transition-all 
-                          peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-[#7471D9]
+                          peer-placeholder-shown:top-[28%] peer-placeholder-shown:text-base peer-placeholder-shown:text-[#7471D9]
                           peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[#a084ff]"
               >
                 Email
