@@ -29,7 +29,7 @@ export default function LoginPage() {
             <input
               type="email"
               placeholder="Email"
-              className="w-full rounded-md border border-[#6e64a8] bg-transparent px-4 py-3 text-white placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
+              className="w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 py-3 text-white placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
             />
 
             {/* Campo Senha com ícone */}
@@ -37,7 +37,7 @@ export default function LoginPage() {
               <input
                 type="password"
                 placeholder="Password"
-                className="w-full rounded-md border border-[#6e64a8] bg-transparent px-4 py-3 pr-10 text-white placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
+                className="w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 py-3 pr-10 text-white placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
               />
               <Eye className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#a0a0c0] cursor-pointer" />
             </div>
@@ -53,7 +53,7 @@ export default function LoginPage() {
             <button
               type="submit"
               className="w-full rounded-full py-3 font-semibold text-white hover:scale-105 transition-transform
-                        bg-[radial-gradient(ellipse_at_center,_#7471D9_25%,_#A89EE5_50%,_#FFE6B3_100%)]"
+                        bg-[radial-gradient(circle_at_center,_#7471D9_0%,_#8F84DD_40%,_#FFE6B3_100%)]"
             >
               Login
             </button>
