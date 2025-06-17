@@ -3,7 +3,7 @@ import { Eye } from 'lucide-react'; // ou qualquer outro ícone de olho
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen bg-[#0F0F1C] text-white">
+    <main className="flex min-h-screen bg-[#0F0F1C]">
       {/* Coluna da imagem */}
       <div className="relative hidden w-[70%] lg:block">
         <Image
@@ -20,8 +20,8 @@ export default function LoginPage() {
       <div className="flex w-full items-center px-16 py-12 lg:w-[30%] bg-[#1E1E2E]">
         <div className="ml-auto w-full max-w-md space-y-12">
           <div>
-            <h1 className="text-5xl font-bold text-[#b4aaff]">Let’s sign you In.</h1>
-            <p className="mt-2 text-sm text-[#a0a0c0]">Hello blablabla blblablabalaa</p>
+            <h1 className="text-5xl font-bold text-[#7471D9]">Let’s sign you In.</h1>
+            <p className="mt-2 text-sm text-[#7471D9]">Hello blablabla blblablabalaa</p>
           </div>
 
           <form className="space-y-5">
@@ -29,22 +29,33 @@ export default function LoginPage() {
             <input
               type="email"
               placeholder="Email"
-              className="w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 py-3 text-white placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
+              className="w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 py-3 
+                        placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
+              style={{
+                color: '#7471D9',             // cor do texto digitado
+                WebkitTextFillColor: '#7471D9' // SAFARI e EDGE (webkit fallback)
+              }}
             />
+
 
             {/* Campo Senha com ícone */}
             <div className="relative">
               <input
                 type="password"
                 placeholder="Password"
-                className="w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 py-3 pr-10 text-white placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
+                className="w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 py-3 pr-10 
+                            placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
+                style={{
+                  color: '#7471D9',             // cor do texto digitado
+                  WebkitTextFillColor: '#7471D9' // SAFARI e EDGE (webkit fallback)
+                }}
               />
-              <Eye className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#a0a0c0] cursor-pointer" />
+              <Eye className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#7471D9] cursor-pointer" />
             </div>
 
             {/* Link de esqueci a senha */}
             <div className="text-right text-sm">
-              <a href="#" className="text-[#cfcfcf] hover:text-white">
+              <a href="#" className="text-[#FFE6B3] hover:text-white">
                 Forgot password?
               </a>
             </div>
@@ -62,9 +73,9 @@ export default function LoginPage() {
           </form>
 
           {/* Link de registro */}
-          <div className="text-center text-sm text-[#cfcfcf]">
+          <div className="text-center text-sm text-[#FFE6B3]">
             Don't have an account?{' '}
-            <a href="#" className="text-[#e7e7ff] font-semibold hover:underline">
+            <a href="#" className="text-[#FFE6B3] font-semibold hover:underline">
               Register
             </a>
           </div>
