@@ -20,7 +20,7 @@ export default function LoginPage() {
       <div className="flex w-full items-center px-16 py-12 lg:w-[30%] bg-[#1E1E2E]">
         <div className="ml-auto w-full max-w-md space-y-12">
           <div>
-            <h1 className="text-3xl font-bold text-[#b4aaff]">Let’s sign you In.</h1>
+            <h1 className="text-5xl font-bold text-[#b4aaff]">Let’s sign you In.</h1>
             <p className="mt-2 text-sm text-[#a0a0c0]">Hello blablabla blblablabalaa</p>
           </div>
 
@@ -52,10 +52,13 @@ export default function LoginPage() {
             {/* Botão Login */}
             <button
               type="submit"
-              className="w-full rounded-full bg-gradient-to-r from-[#a084ff] to-[#c6b6ff] py-3 font-semibold text-black hover:scale-105 transition-transform"
+              className="w-full rounded-full py-3 font-semibold text-white hover:scale-105 transition-transform
+                        bg-[radial-gradient(ellipse_at_center,_#7471D9_25%,_#A89EE5_50%,_#FFE6B3_100%)]"
             >
               Login
             </button>
+
+
           </form>
 
           {/* Link de registro */}
