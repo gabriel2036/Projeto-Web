@@ -26,16 +26,25 @@ export default function LoginPage() {
 
           <form className="space-y-5">
             {/* Campo Email */}
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 py-3 
-                        placeholder-[#a0a0c0] focus:border-[#a084ff] focus:outline-none"
-              style={{
-                color: '#7471D9',             // cor do texto digitado
-                WebkitTextFillColor: '#7471D9' // SAFARI e EDGE (webkit fallback)
-              }}
-            />
+            <div className="relative w-full">
+              <input
+                type="email"
+                id="email"
+                placeholder=" "
+                required
+                className="peer w-full rounded-md border-2 border-[#7471D9] bg-transparent px-4 pt-6 pb-2 
+                          text-[#7471D9] placeholder-transparent focus:border-[#a084ff] focus:outline-none"
+              />
+              <label
+                htmlFor="email"
+                className="absolute left-3 -top-2.5 bg-[#1E1E2E] px-1 text-sm text-[#a0a0c0] transition-all 
+                          peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-[#7471D9]
+                          peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[#a084ff]"
+              >
+                Email
+              </label>
+            </div>
+
 
 
             {/* Campo Senha com ícone */}
