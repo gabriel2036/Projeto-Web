@@ -1,0 +1,38 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String      @id @default(cuid())
+  email     String      @unique
+  name      String?
+  password  String      // Vamos armazenar o hash da senha aqui
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relacionamentos
+  sentFriendRequests     Friendship[] @relation("sentRequests")
+  receivedFriendRequests Friendship[] @relation("receivedRequests")
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  senderId  String
+  receiverId String
+  status    String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  sender    User     @relation("sentRequests", fields: [senderId], references: [id])
+  receiver  User     @relation("receivedRequests", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId]) // Garante que não haja pedidos duplicados
+}
