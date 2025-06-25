@@ -30,7 +30,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Campos obrigatórios faltando' }, { status: 400 });
     }
 
-    // Gere o "salt" e o hash da senha
+     const existingUser = await prisma.user.findUnique({
+      where: { email: email },
+    });
+
+    if (existingUser) {
+      // Usa o status 409 Conflict para indicar que o recurso já existe
+      return NextResponse.json({ error: 'Este email já está em uso.' }, { status: 409 });
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
