@@ -7,6 +7,17 @@ export default function Home() {
   const [interesses, setInteresses] = useState<string[]>([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [filmeSelecionado, setFilmeSelecionado] = useState<{ src: string; alt: string } | null>(null);
+  const [mostrarSoInteresses, setMostrarSoInteresses] = useState(false); // FILTRO
+
+  // Filmes fixos (pode vir de API futuramente)
+  const filmes = [
+    { src: "/placeholder/Orgulho.jpg", alt: "Pride & Prejudice 2005" },
+    { src: "/placeholder/odeio.jpg", alt: "10 Things I Hate About You" },
+    { src: "/placeholder/Brid.jpg", alt: "Bridgertown" },
+    { src: "/placeholder/Orgulho.jpg", alt: "Pride & Prejudice 2005" },
+    { src: "/placeholder/odeio.jpg", alt: "10 Things I Hate About You" },
+    { src: "/placeholder/Brid.jpg", alt: "Bridgertown" },
+  ];
 
   // Carrega interesses do localStorage
   useEffect(() => {
@@ -40,6 +51,11 @@ export default function Home() {
     setModalAberto(false);
     setFilmeSelecionado(null);
   };
+
+  // Filmes filtrados de acordo com checkbox
+  const filmesExibidos = mostrarSoInteresses
+    ? filmes.filter((f) => interesses.includes(f.alt))
+    : filmes;
 
   return (
     <div className="min-h-screen bg-[#0e0e13] text-[#7471D9] font-sans overflow-x-hidden relative">
@@ -116,55 +132,67 @@ export default function Home() {
             />
           </div>
 
-          {/* Grid de filmes */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
-            {[
-              { src: "/placeholder/Orgulho.jpg", alt: "Pride & Prejudice 2005" },
-              { src: "/placeholder/odeio.jpg", alt: "10 Things I Hate About You" },
-              { src: "/placeholder/Brid.jpg", alt: "Bridgertown" },
-              { src: "/placeholder/Orgulho.jpg", alt: "Pride & Prejudice 2005" },
-              { src: "/placeholder/odeio.jpg", alt: "10 Things I Hate About You" },
-              { src: "/placeholder/Brid.jpg", alt: "Bridgertown" },
-            ].map((movie, i) => {
-              const estaNosInteresses = interesses.includes(movie.alt);
-              return (
-                <div
-                  key={i}
-                  className="relative group w-full max-w-[216px] h-[28vw] min-h-[120px] max-h-[300px] rounded-lg overflow-hidden"
-                >
-                  <img
-                    src={movie.src}
-                    alt={movie.alt}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center space-y-2 text-white text-sm font-semibold transition-opacity duration-300">
-                    {/* Ordem alterada: Saber mais primeiro */}
-                    <button
-                      onClick={() => abrirModal(movie)}
-                      className="bg-white text-[#1F1F26] px-4 py-2 rounded-full hover:bg-gray-200 transition"
-                    >
-                      Saber mais
-                    </button>
+          {/* Checkbox filtro */}
+          <div className="flex justify-center mb-6">
+            <label className="inline-flex items-center space-x-2 cursor-pointer text-[#A8A4F8]">
+              <input
+                type="checkbox"
+                checked={mostrarSoInteresses}
+                onChange={() => setMostrarSoInteresses(!mostrarSoInteresses)}
+                className="form-checkbox h-5 w-5 text-[#7471D9] rounded"
+              />
+              <span>Mostrar só filmes nos interesses</span>
+            </label>
+          </div>
 
-                    {!estaNosInteresses ? (
+          {/* Grid de filmes filtrados */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
+            {filmesExibidos.length > 0 ? (
+              filmesExibidos.map((movie, i) => {
+                const estaNosInteresses = interesses.includes(movie.alt);
+                return (
+                  <div
+                    key={i}
+                    className="relative group w-full max-w-[216px] h-[28vw] min-h-[120px] max-h-[300px] rounded-lg overflow-hidden"
+                  >
+                    <img
+                      src={movie.src}
+                      alt={movie.alt}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center space-y-2 text-white text-sm font-semibold transition-opacity duration-300">
+                      {/* Ordem alterada: Saber mais primeiro */}
                       <button
-                        onClick={() => adicionarInteresse(movie.alt)}
-                        className="bg-[#7471D9] px-4 py-2 rounded-full hover:bg-[#5c58c9] transition"
+                        onClick={() => abrirModal(movie)}
+                        className="bg-white text-[#1F1F26] px-4 py-2 rounded-full hover:bg-gray-200 transition"
                       >
-                        Adicionar aos interesses
+                        Saber mais
                       </button>
-                    ) : (
-                      <button
-                        onClick={() => removerInteresse(movie.alt)}
-                        className="bg-red-500 px-4 py-2 rounded-full hover:bg-red-600 transition"
-                      >
-                        Remover dos interesses
-                      </button>
-                    )}
+
+                      {!estaNosInteresses ? (
+                        <button
+                          onClick={() => adicionarInteresse(movie.alt)}
+                          className="bg-[#7471D9] px-4 py-2 rounded-full hover:bg-[#5c58c9] transition"
+                        >
+                          Adicionar aos interesses
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => removerInteresse(movie.alt)}
+                          className="bg-red-500 px-4 py-2 rounded-full hover:bg-red-600 transition"
+                        >
+                          Remover dos interesses
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+                <p className="text-center text-2xl font-semibold text-[#A8A4F8] col-span-full flex items-center justify-center h-40">
+                Nenhum filme para mostrar.
+                </p>
+            )}
           </div>
         </div>
       </div>
