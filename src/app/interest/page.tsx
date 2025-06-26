@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Drawer from "../../components/DrawerLateral";
 
 export default function Home() {
   const [isOpen, setIsOpen] = useState(true);
   const [interesses, setInteresses] = useState<string[]>([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [filmeSelecionado, setFilmeSelecionado] = useState<{ src: string; alt: string } | null>(null);
-  const [mostrarSoInteresses, setMostrarSoInteresses] = useState(false); // FILTRO
+  const [mostrarSoInteresses, setMostrarSoInteresses] = useState(false);
 
-  // Filmes fixos (pode vir de API futuramente)
   const filmes = [
     { src: "/placeholder/Orgulho.jpg", alt: "Pride & Prejudice 2005" },
     { src: "/placeholder/odeio.jpg", alt: "10 Things I Hate About You" },
@@ -19,7 +19,6 @@ export default function Home() {
     { src: "/placeholder/Brid.jpg", alt: "Bridgertown" },
   ];
 
-  // Carrega interesses do localStorage
   useEffect(() => {
     const armazenado = localStorage.getItem("interesses");
     if (armazenado) {
@@ -27,7 +26,6 @@ export default function Home() {
     }
   }, []);
 
-  // Salva interesses no localStorage
   useEffect(() => {
     localStorage.setItem("interesses", JSON.stringify(interesses));
   }, [interesses]);
@@ -52,53 +50,14 @@ export default function Home() {
     setFilmeSelecionado(null);
   };
 
-  // Filmes filtrados de acordo com checkbox
   const filmesExibidos = mostrarSoInteresses
     ? filmes.filter((f) => interesses.includes(f.alt))
     : filmes;
 
   return (
     <div className="min-h-screen bg-[#0e0e13] text-[#7471D9] font-sans overflow-x-hidden relative">
-      {/* Drawer lateral */}
-      <div
-        className={`fixed top-0 left-0 h-full w-[280px] bg-[#2f2a51] p-6 flex flex-col justify-between z-50 rounded-r-3xl transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="space-y-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <img src="/sino.png" alt="Logo" className="w-6 h-6" />
-              <h1 className="text-xl font-bold text-[#A8A4F8]">YouVerse</h1>
-            </div>
-            <button onClick={() => setIsOpen(false)} className="text-white text-xl">❌</button>
-          </div>
+      <Drawer isOpen={isOpen} onClose={() => setIsOpen(false)} />
 
-          <nav className="flex flex-col space-y-4 text-[#A8A4F8]">
-            <button className="flex items-center space-x-2 text-left hover:text-white transition">
-              <span>💜</span>
-              <span>Match</span>
-            </button>
-            <button className="flex items-center space-x-2 bg-[#1F1F26] text-white px-4 py-2 rounded-full font-semibold shadow">
-              <span>⭐</span>
-              <span>Interests</span>
-            </button>
-          </nav>
-        </div>
-
-        <div className="space-y-4 text-[#A8A4F8]">
-          <button className="flex items-center space-x-2 hover:text-white transition">
-            <span>↩️</span>
-            <span>Logout</span>
-          </button>
-          <div className="flex items-center space-x-2 bg-[#1F1F26] px-4 py-2 rounded-full">
-            <span>🟣</span>
-            <span>Your Name</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Botão do sino flutuante */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -109,7 +68,6 @@ export default function Home() {
         </button>
       )}
 
-      {/* Conteúdo principal */}
       <div className={`transition-all duration-300 p-6 ${isOpen ? "ml-[280px]" : "ml-0"}`}>
         <div className="bg-[#1F1F26] rounded-[36px] max-w-[1850px] mx-auto p-8 relative shadow-lg">
           <h1 className="text-center text-4xl md:text-5xl lg:text-6xl font-bold mb-2 text-[#A8A4F8]">
@@ -119,33 +77,31 @@ export default function Home() {
             Choose the films that interest you the most
           </p>
 
-          <div className="flex items-center border-2 border-[#7471D9] rounded-xl px-4 py-2 max-w-xl mx-auto mb-8">
-            <input
-              type="text"
-              placeholder="Search in your friend list..."
-              className="bg-transparent flex-1 outline-none text-[#7471D9] placeholder:text-[#7471D9]/60"
-            />
-            <img
-              src="/lupa.png"
-              alt="Buscar"
-              className="w-6 md:w-8 filter invert sepia-[0.4] saturate-[7.5] hue-rotate-[210deg] brightness-[0.95] contrast-[0.92]"
-            />
-          </div>
+          <div className="flex flex-col items-center gap-4 max-w-5xl mx-auto mb-4">
+            <div className="flex items-center border-2 border-[#7471D9] rounded-xl px-4 py-2 w-150">
+              <input
+                type="text"
+                placeholder="Search in your friend list..."
+                className="bg-transparent flex-1 outline-none text-[#7471D9] placeholder:text-[#7471D9]/60"
+              />
+              <img
+                src="/lupa.png"
+                alt="Buscar"
+                className="w-6 md:w-8 filter invert sepia-[0.4] saturate-[7.5] hue-rotate-[210deg] brightness-[0.95] contrast-[0.92]"
+              />
+            </div>
 
-          {/* Checkbox filtro */}
-          <div className="flex justify-center mb-6">
-            <label className="inline-flex items-center space-x-2 cursor-pointer text-[#A8A4F8]">
+            <label className="inline-flex items-center space-x-2 text-[#A8A4F8] text-sm md:text-base cursor-pointer">
               <input
                 type="checkbox"
                 checked={mostrarSoInteresses}
                 onChange={() => setMostrarSoInteresses(!mostrarSoInteresses)}
                 className="form-checkbox h-5 w-5 text-[#7471D9] rounded"
               />
-              <span>Mostrar só filmes nos interesses</span>
+              <span>Mostrar apenas interesses</span>
             </label>
           </div>
 
-          {/* Grid de filmes filtrados */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
             {filmesExibidos.length > 0 ? (
               filmesExibidos.map((movie, i) => {
@@ -161,14 +117,12 @@ export default function Home() {
                       className="w-full h-full object-cover rounded-lg"
                     />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center space-y-2 text-white text-sm font-semibold transition-opacity duration-300">
-                      {/* Ordem alterada: Saber mais primeiro */}
                       <button
                         onClick={() => abrirModal(movie)}
                         className="bg-white text-[#1F1F26] px-4 py-2 rounded-full hover:bg-gray-200 transition"
                       >
                         Saber mais
                       </button>
-
                       {!estaNosInteresses ? (
                         <button
                           onClick={() => adicionarInteresse(movie.alt)}
@@ -189,23 +143,22 @@ export default function Home() {
                 );
               })
             ) : (
-                <p className="text-center text-2xl font-semibold text-[#A8A4F8] col-span-full flex items-center justify-center h-40">
+              <p className="text-center text-2xl font-semibold text-[#A8A4F8] col-span-full flex items-center justify-center h-40">
                 Nenhum filme para mostrar.
-                </p>
+              </p>
             )}
           </div>
         </div>
       </div>
 
-      {/* Modal */}
       {modalAberto && filmeSelecionado && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-          onClick={fecharModal} // Clicar no fundo fecha o modal
+          onClick={fecharModal}
         >
           <div
             className="bg-[#1F1F26] text-white p-6 rounded-2xl shadow-xl w-[90%] max-w-md relative"
-            onClick={(e) => e.stopPropagation()} // Evita fechamento ao clicar dentro do modal
+            onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-2xl font-bold mb-4">{filmeSelecionado.alt}</h2>
             <p className="text-sm text-[#A8A4F8] mb-6">
