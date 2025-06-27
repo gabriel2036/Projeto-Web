@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Drawer from "../../components/DrawerLateral";
 
 export default function Home() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [interesses, setInteresses] = useState<string[]>([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [filmeSelecionado, setFilmeSelecionado] = useState<{ src: string; alt: string } | null>(null);
