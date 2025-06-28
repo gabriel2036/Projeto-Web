@@ -1,35 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useSession } from "next-auth/react";
 import Drawer from "../../components/DrawerLateral"; // Verifique se este caminho está correto
 
-// Define o tipo para um objeto de filme
+// Define o tipo para um objeto de filme vindo da nossa API
 type Movie = {
-  src: string;
-  alt: string;
+  id: number;
+  title: string;
+  poster_path: string;
 };
 
 export default function InterestsPage() {
-  const { data: session, status } = useSession(); // Hook para obter a sessão do utilizador
+  const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [interesses, setInteresses] = useState<string[]>([]);
+  
+  // Estados para os filmes, pesquisa e erros
+  const [displayedMovies, setDisplayedMovies] = useState<Movie[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoadingMovies, setIsLoadingMovies] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null); // NOVO: Estado para erros
+
+  // Outros estados para o modal
   const [modalAberto, setModalAberto] = useState(false);
   const [filmeSelecionado, setFilmeSelecionado] = useState<Movie | null>(null);
   const [mostrarSoInteresses, setMostrarSoInteresses] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(""); // Estado para a barra de pesquisa
 
-  // Dados de exemplo - idealmente, isto virá de uma chamada à API do TMDb
-  const filmes: Movie[] = [
-    { src: "/placeholder/Orgulho.jpg", alt: "Pride & Prejudice 2005" },
-    { src: "/placeholder/odeio.jpg", alt: "10 Things I Hate About You" },
-    { src: "/placeholder/Brid.jpg", alt: "Bridgerton" },
-    { src: "/placeholder/Filme4.jpg", alt: "Filme Exemplo 4" },
-    { src: "/placeholder/Filme5.jpg", alt: "Filme Exemplo 5" },
-    { src: "/placeholder/Filme6.jpg", alt: "Filme Exemplo 6" },
-  ];
+  // Função para buscar os filmes populares
+  const fetchPopularMovies = async () => {
+    setIsLoadingMovies(true);
+    setApiError(null); // Limpa erros antigos
+    try {
+      const response = await fetch('/api/movies');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setDisplayedMovies(data);
+    } catch (error) {
+      console.error("Erro ao buscar filmes populares:", error);
+      setApiError("Não foi possível carregar os filmes. Verifique o console para mais detalhes.");
+    } finally {
+      setIsLoadingMovies(false);
+    }
+  };
 
-  // Efeito para buscar os interesses do utilizador autenticado
+  // Busca os filmes populares na primeira vez que o componente carrega
+  useEffect(() => {
+    fetchPopularMovies();
+  }, []); 
+
+  // Busca os interesses do utilizador quando ele está autenticado
   useEffect(() => {
     if (status === "authenticated") {
       const fetchInteresses = async () => {
@@ -38,41 +60,60 @@ export default function InterestsPage() {
           if (response.ok) {
             const data = await response.json();
             setInteresses(data);
-          } else {
-            console.error("Falha ao buscar interesses:", await response.text());
           }
         } catch (error) {
-          console.error("Erro de rede ao buscar interesses:", error);
+          console.error("Erro ao buscar interesses:", error);
         }
       };
       fetchInteresses();
     }
   }, [status]);
 
-  // Função para adicionar um interesse
+  // Função para lidar com a pesquisa de filmes
+  const handleSearchSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!searchQuery.trim()) {
+      fetchPopularMovies();
+      return;
+    }
+
+    setIsLoadingMovies(true);
+    setApiError(null);
+    try {
+      const response = await fetch(`/api/movies?query=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setDisplayedMovies(data);
+    } catch (error) {
+      console.error("Erro ao pesquisar filmes:", error);
+      setApiError("A pesquisa falhou. Verifique se a API está a funcionar corretamente.");
+    } finally {
+      setIsLoadingMovies(false);
+    }
+  };
+
+  // Funções completas para adicionar e remover interesses
   const adicionarInteresse = async (filme: Movie) => {
-    if (interesses.includes(filme.alt)) return; // Não faz nada se já existir
-
-    const novosInteresses = [...interesses, filme.alt];
-    setInteresses(novosInteresses); // Atualização otimista da UI
-
+    if (interesses.includes(filme.title)) return;
+    const novosInteresses = [...interesses, filme.title];
+    setInteresses(novosInteresses);
     try {
       await fetch('/api/interests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: filme.alt, imageUrl: filme.src }),
+        body: JSON.stringify({ name: filme.title, imageUrl: filme.poster_path }),
       });
     } catch (error) {
       console.error("Erro ao adicionar interesse:", error);
-      setInteresses(interesses); // Reverte a UI em caso de erro
+      setInteresses(interesses.filter(i => i !== filme.title)); // Reverte em caso de erro
     }
   };
 
-  // Função para remover um interesse
   const removerInteresse = async (titulo: string) => {
     const novosInteresses = interesses.filter((t) => t !== titulo);
-    setInteresses(novosInteresses); // Atualização otimista
-
+    setInteresses(novosInteresses);
     try {
       await fetch('/api/interests', {
         method: 'DELETE',
@@ -81,7 +122,7 @@ export default function InterestsPage() {
       });
     } catch (error) {
       console.error("Erro ao remover interesse:", error);
-      setInteresses(interesses); // Reverte a UI
+      setInteresses([...novosInteresses, titulo]); // Reverte em caso de erro
     }
   };
 
@@ -95,14 +136,12 @@ export default function InterestsPage() {
     setFilmeSelecionado(null);
   };
   
-  // Filtra os filmes com base na pesquisa E na checkbox de interesses
-  const filmesFiltrados = filmes
-    .filter((f) => f.alt.toLowerCase().includes(searchQuery.toLowerCase()))
-    .filter((f) => (mostrarSoInteresses ? interesses.includes(f.alt) : true));
-
+  const filmesFiltrados = mostrarSoInteresses
+    ? displayedMovies.filter((f) => interesses.includes(f.title))
+    : displayedMovies;
 
   if (status === "loading") {
-    return <div className="min-h-screen bg-[#0e0e13] flex items-center justify-center text-white">Carregando...</div>;
+    return <div className="min-h-screen bg-[#0e0e13] flex items-center justify-center text-white">A carregar sessão...</div>;
   }
   
   if (status !== "authenticated") {
@@ -114,11 +153,7 @@ export default function InterestsPage() {
       <Drawer isOpen={isOpen} onClose={() => setIsOpen(false)} userName={session.user?.name || ''} />
 
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          aria-label="Abrir menu"
-          className="fixed top-10 left-10 z-50 bg-[#2f2a51] p-3 rounded-2xl shadow-lg border border-[#7471D9] hover:scale-105 transition-transform duration-200"
-        >
+        <button onClick={() => setIsOpen(true)} aria-label="Abrir menu" className="fixed top-10 left-10 z-50 bg-[#2f2a51] p-3 rounded-2xl shadow-lg border border-[#7471D9] hover:scale-105 transition-transform duration-200">
           <img src="/sino.png" alt="Abrir menu" className="w-8 h-8" />
         </button>
       )}
@@ -132,31 +167,30 @@ export default function InterestsPage() {
             Choose the films that interest you the most
           </p>
 
-          <div className="flex flex-col items-center gap-4 max-w-5xl mx-auto mb-4">
+          <form onSubmit={handleSearchSubmit} className="flex flex-col items-center gap-4 max-w-5xl mx-auto mb-4">
             <div className="flex items-center border-2 border-[#7471D9] rounded-xl px-4 py-2 w-full md:w-1/2">
-              <input
-                type="text"
-                placeholder="Pesquisar filmes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent flex-1 outline-none text-[#7471D9] placeholder:text-[#7471D9]/60"
-              />
-              <img src="/lupa.png" alt="Buscar" className="w-6 h-6 filter invert sepia-[0.4] saturate-[7.5] hue-rotate-[210deg] brightness-[0.95] contrast-[0.92]" />
+              <input type="text" placeholder="Pesquisar filmes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent flex-1 outline-none text-[#7471D9] placeholder:text-[#7471D9]/60" />
+              <button type="submit">
+                <img src="/lupa.png" alt="Buscar" className="w-6 h-6 filter invert sepia-[0.4] saturate-[7.5] hue-rotate-[210deg] brightness-[0.95] contrast-[0.92] cursor-pointer" />
+              </button>
             </div>
-
             <label className="inline-flex items-center space-x-2 text-[#A8A4F8] text-sm md:text-base cursor-pointer">
-              <input type="checkbox" checked={mostrarSoInteresses} onChange={() => setMostrarSoInteresses(!mostrarSoInteresses)} className="form-checkbox h-5 w-5 text-[#7471D9] rounded" />
+              <input type="checkbox" checked={mostrarSoInteresses} onChange={() => setMostrarSoInteresses(!mostrarSoInteresses)} className="form-checkbox h-5 w-5 text-[#7471D9] rounded bg-transparent border-[#7471D9]" />
               <span>Mostrar apenas interesses</span>
             </label>
-          </div>
+          </form>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
-            {filmesFiltrados.length > 0 ? (
-              filmesFiltrados.map((movie, i) => {
-                const estaNosInteresses = interesses.includes(movie.alt);
+            {isLoadingMovies ? (
+              <p className="col-span-full text-center text-lg">A carregar filmes...</p>
+            ) : apiError ? (
+              <p className="col-span-full text-center text-lg text-red-400">{apiError}</p>
+            ) : filmesFiltrados.length > 0 ? (
+              filmesFiltrados.map((movie) => {
+                const estaNosInteresses = interesses.includes(movie.title);
                 return (
-                  <div key={`${movie.alt}-${i}`} className="relative group w-full max-w-[216px] h-[28vw] min-h-[120px] max-h-[300px] rounded-lg overflow-hidden">
-                    <img src={movie.src} alt={movie.alt} className="w-full h-full object-cover rounded-lg" />
+                  <div key={movie.id} className="relative group w-full max-w-[216px] h-[28vw] min-h-[120px] max-h-[300px] rounded-lg overflow-hidden">
+                    <img src={movie.poster_path} alt={movie.title} className="w-full h-full object-cover rounded-lg" />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center space-y-2 text-white text-sm font-semibold transition-opacity duration-300">
                       <button onClick={() => abrirModal(movie)} className="bg-white text-[#1F1F26] px-4 py-2 rounded-full hover:bg-gray-200 transition">
                         Saber mais
@@ -166,7 +200,7 @@ export default function InterestsPage() {
                           Adicionar aos interesses
                         </button>
                       ) : (
-                        <button onClick={() => removerInteresse(movie.alt)} className="bg-red-500 px-4 py-2 rounded-full hover:bg-red-600 transition">
+                        <button onClick={() => removerInteresse(movie.title)} className="bg-red-500 px-4 py-2 rounded-full hover:bg-red-600 transition">
                           Remover dos interesses
                         </button>
                       )}
@@ -183,10 +217,20 @@ export default function InterestsPage() {
         </div>
       </div>
       
-      {/* O código do Modal continua aqui, sem alterações na sua lógica */}
       {modalAberto && filmeSelecionado && (
-        <div onClick={fecharModal} className="fixed inset-0 ...">
-            {/* ... */}
+        <div onClick={fecharModal} className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div onClick={(e) => e.stopPropagation()} className="bg-[#1F1F26] text-white p-6 rounded-2xl shadow-xl w-[90%] max-w-md relative">
+            <h2 className="text-2xl font-bold mb-4">{filmeSelecionado.title}</h2>
+            <p className="text-sm text-[#A8A4F8] mb-6">Em breve: mais detalhes sobre este filme!</p>
+            <div className="flex flex-col sm:flex-row justify-end gap-4">
+              <button onClick={fecharModal} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-full">Fechar</button>
+              {!interesses.includes(filmeSelecionado.title) ? (
+                <button onClick={() => { adicionarInteresse(filmeSelecionado); fecharModal(); }} className="bg-[#7471D9] hover:bg-[#5c58c9] px-4 py-2 rounded-full">Adicionar aos interesses</button>
+              ) : (
+                <button onClick={() => { removerInteresse(filmeSelecionado.title); fecharModal(); }} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-full">Remover dos interesses</button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

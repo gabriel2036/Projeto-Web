@@ -10,59 +10,123 @@ datasource db {
 }
 
 // Tabela de usuários
-// Corresponde à sua tabela 'Usuario'
 model User {
-  id       Int      @id @default(autoincrement()) @map("id_user")
-  name     String   @map("nome")
-  email    String   @unique
-  password String   @map("senha")
+  id        Int      @id @default(autoincrement()) @map("id_user")
+  name      String   @map("nome")
+  email     String   @unique
+  password  String   @map("senha")
 
   // Relacionamentos
-  interests      UserInterest[] // Interesses que este usuário marcou
-  matchesAsUser1 Match[]        @relation("User1Matches")
-  matchesAsUser2 Match[]        @relation("User2Matches")
-
-  @@map("usuario") // Mapeia este modelo para a tabela 'usuario' no banco
+  interests              UserInterest[]
+  sentFriendRequests     Friendship[]     @relation("SentRequests")
+  receivedFriendRequests Friendship[]     @relation("ReceivedRequests")
+  createdMatchSessions   MatchSession[]
+  matchSessions          MatchParticipant[]
+  votes                  MatchVote[]
+  
+  @@map("usuario")
 }
 
-// Tabela de interesses
-// Corresponde à sua tabela 'Interesse' (um filme, gênero, etc.)
+// Tabela de interesses (permanece a mesma)
 model Interest {
-  id       Int      @id @default(autoincrement()) @map("id_interesse")
-  name     String   @unique @map("nome_interesse")
-  imageUrl String?  @map("imagem_url")
-
-  // Relacionamentos
-  users UserInterest[]
+  id        Int      @id @default(autoincrement()) @map("id_interesse")
+  name      String   @unique @map("nome_interesse")
+  imageUrl  String?  @map("imagem_url")
+  users     UserInterest[]
+  matchResults MatchResult[]
+  votes      MatchVote[]
 
   @@map("interesse")
 }
 
-// Tabela de relacionamento entre Usuário e Interesse
-// Corresponde à sua tabela 'Interesse_Usuario'
+// Tabela de relacionamento entre Usuário e Interesse (permanece a mesma)
 model UserInterest {
-  userId     Int     @map("id_user")
-  interestId Int     @map("id_interesse")
-  type       String? @map("tipo_interesse") // ex: 'like', 'dislike'
+  userId     Int      @map("id_user")
+  interestId Int      @map("id_interesse")
+  type       String?  @map("tipo_interesse")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
 
-  // Relacionamentos com as outras tabelas
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
-
-  @@id([userId, interestId]) // Chave primária composta
+  @@id([userId, interestId])
   @@map("interesse_usuario")
 }
 
-// Tabela de relacionamento entre dois usuários
-// Corresponde à sua tabela 'Match'
-model Match {
-  user1Id Int @map("id_user1")
-  user2Id Int @map("id_user2")
+// Enum para controlar o status da amizade
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
 
-  // Relacionamentos com a tabela User
-  user1 User @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
-  user2 User @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
+// Tabela de Amizades para gerir os pedidos
+model Friendship {
+  requesterId Int @map("id_requester")
+  addresseeId Int @map("id_addressee")
+  status      FriendshipStatus @default(PENDING)
+  requester   User             @relation("SentRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User             @relation("ReceivedRequests", fields: [addresseeId], references: [id], onDelete: Cascade)
 
-  @@id([user1Id, user2Id]) // Chave primária composta
-  @@map("match")
+  @@id([requesterId, addresseeId])
+  @@map("friendship")
+}
+
+
+// --- MODELOS PARA AS SESSÕES DE MATCH ---
+
+enum MatchAction {
+  ACCEPTED
+  DECLINED
+}
+
+// Representa uma sessão de votação de filmes
+model MatchSession {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at")
+  status    String   @default("VOTING") // ex: VOTING, COMPLETED
+  creatorId Int      @map("creator_id")
+  creator   User     @relation(fields: [creatorId], references: [id])
+  participants MatchParticipant[]
+  votes      MatchVote[]
+  results      MatchResult[]
+
+  @@map("match_session")
+}
+
+// Tabela para ligar os utilizadores a uma sessão de match
+model MatchParticipant {
+  sessionId Int @map("session_id")
+  userId    Int @map("user_id")
+  session   MatchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, userId])
+  @@map("match_participant")
+}
+
+// NOVA TABELA: Regista cada voto individual de um utilizador num filme dentro de uma sessão
+model MatchVote {
+  sessionId  Int @map("session_id")
+  userId     Int @map("user_id")
+  interestId Int @map("interest_id")
+
+  action     MatchAction // ACCEPTED ou DECLINED
+
+  session  MatchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest Interest     @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, userId, interestId])
+  @@map("match_vote")
+}
+
+
+// Tabela para guardar os filmes que deram "match" numa sessão
+model MatchResult {
+  sessionId  Int @map("session_id")
+  interestId Int @map("interest_id")
+  session    MatchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  interest   Interest     @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, interestId])
+  @@map("match_result")
 }
