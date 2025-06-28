@@ -7,7 +7,7 @@ import { authOptions } from '../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
-// Função para obter o ID do utilizador atual a partir da sessão
+// Função auxiliar para obter o ID do utilizador atual a partir da sessão
 async function getCurrentUserId(session: any) {
   if (!session?.user?.email) return null;
   
@@ -20,7 +20,7 @@ async function getCurrentUserId(session: any) {
 }
 
 
-// GET: Função para procurar utilizadores ou listar pedidos de amizade
+// GET: Função para procurar utilizadores, listar pedidos OU listar amigos
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   const currentUserId = await getCurrentUserId(session);
@@ -31,36 +31,70 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get('query');
-  const type = searchParams.get('type'); // ex: 'requests'
+  const type = searchParams.get('type'); 
 
   try {
     // Listar pedidos de amizade pendentes para o utilizador atual
     if (type === 'requests') {
       const requests = await prisma.friendship.findMany({
-        where: {
-          addresseeId: currentUserId,
-          status: 'PENDING',
-        },
-        include: {
-          requester: { // Inclui os dados de quem enviou o pedido
-            select: { id: true, name: true, email: true },
-          },
-        },
+        where: { addresseeId: currentUserId, status: 'PENDING' },
+        include: { requester: { select: { id: true, name: true }}},
       });
       return NextResponse.json(requests);
     }
     
+    // Listar amigos já ACEITES
+    if (type === 'accepted') {
+        const friendships = await prisma.friendship.findMany({
+            where: {
+                status: 'ACCEPTED',
+                OR: [
+                    { requesterId: currentUserId },
+                    { addresseeId: currentUserId },
+                ],
+            },
+            include: {
+                requester: { select: { id: true, name: true } },
+                addressee: { select: { id: true, name: true } },
+            }
+        });
+
+        const friends = friendships.map(friendship => {
+            return friendship.requesterId === currentUserId ? friendship.addressee : friendship.requester;
+        });
+        
+        return NextResponse.json(friends);
+    }
+
     // Procurar por novos utilizadores para adicionar
     if (query) {
+      // --- LÓGICA ATUALIZADA AQUI ---
+      // 1. Encontrar todos os IDs de utilizadores com quem já existe uma ligação
+      const existingFriendships = await prisma.friendship.findMany({
+        where: {
+          OR: [
+            { requesterId: currentUserId },
+            { addresseeId: currentUserId },
+          ],
+        },
+        select: { requesterId: true, addresseeId: true },
+      });
+
+      // 2. Criar uma lista de todos os IDs a serem excluídos da pesquisa
+      const idsToExclude = existingFriendships.flatMap(f => [f.requesterId, f.addresseeId]);
+      idsToExclude.push(currentUserId); // Garante que o próprio utilizador nunca aparece
+      const uniqueIdsToExclude = [...new Set(idsToExclude)];
+      
       const users = await prisma.user.findMany({
         where: {
           AND: [
             { name: { contains: query, mode: 'insensitive' } },
-            { id: { not: currentUserId } }, // Não se pode procurar por si mesmo
+            // 3. A pesquisa agora exclui todos os IDs da lista que criámos
+            { id: { notIn: uniqueIdsToExclude } } 
           ]
         },
         select: { id: true, name: true, email: true },
-        take: 10, // Limita o número de resultados
+        take: 10,
       });
       return NextResponse.json(users);
     }
@@ -73,7 +107,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Enviar um novo pedido de amizade
+// POST: Enviar um novo pedido de amizade (sem alterações)
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const requesterId = await getCurrentUserId(session);
@@ -82,7 +116,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { addresseeId } = await request.json(); // ID do utilizador a quem se envia o pedido
+    const { addresseeId } = await request.json();
 
     if (requesterId === addresseeId) {
         return NextResponse.json({ error: 'Não pode adicionar a si mesmo' }, { status: 400 });
@@ -90,20 +124,16 @@ export async function POST(request: NextRequest) {
 
     try {
         const newFriendship = await prisma.friendship.create({
-            data: {
-                requesterId: requesterId,
-                addresseeId: addresseeId,
-                status: FriendshipStatus.PENDING,
-            }
+            data: { requesterId, addresseeId, status: FriendshipStatus.PENDING }
         });
         return NextResponse.json(newFriendship, { status: 201 });
     } catch (error) {
         console.error("Erro ao enviar pedido de amizade:", error);
-        return NextResponse.json({ error: 'Não foi possível enviar o pedido. O utilizador já pode ter sido adicionado.' }, { status: 409 });
+        return NextResponse.json({ error: 'Não foi possível enviar o pedido.' }, { status: 409 });
     }
 }
 
-// PUT: Aceitar ou recusar um pedido de amizade
+// PUT: Aceitar ou RECUSAR um pedido de amizade (sem alterações)
 export async function PUT(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const currentUserId = await getCurrentUserId(session);
@@ -112,23 +142,29 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
     
-    const { requesterId, status } = await request.json(); // ID de quem enviou o pedido e o novo status ('ACCEPTED' ou 'DECLINED')
-
-    const newStatus = status.toUpperCase() === 'ACCEPTED' ? FriendshipStatus.ACCEPTED : FriendshipStatus.DECLINED;
+    const { requesterId, status } = await request.json();
 
     try {
-        const updatedFriendship = await prisma.friendship.update({
-            where: {
-                requesterId_addresseeId: {
-                    requesterId: requesterId,
-                    addresseeId: currentUserId, // Garante que só o destinatário pode responder
+        if (status.toUpperCase() === 'ACCEPTED') {
+            const updatedFriendship = await prisma.friendship.update({
+                where: {
+                    requesterId_addresseeId: { requesterId, addresseeId: currentUserId }
+                },
+                data: { status: FriendshipStatus.ACCEPTED }
+            });
+            return NextResponse.json(updatedFriendship);
+        } 
+        else if (status.toUpperCase() === 'DECLINED') {
+            await prisma.friendship.delete({
+                where: {
+                    requesterId_addresseeId: { requesterId, addresseeId: currentUserId }
                 }
-            },
-            data: {
-                status: newStatus,
-            }
-        });
-        return NextResponse.json(updatedFriendship);
+            });
+            return NextResponse.json({ message: 'Pedido de amizade recusado e apagado.' });
+        }
+        else {
+            return NextResponse.json({ error: 'Ação inválida.' }, { status: 400 });
+        }
     } catch (error) {
         console.error("Erro ao responder ao pedido de amizade:", error);
         return NextResponse.json({ error: 'Não foi possível responder ao pedido.' }, { status: 500 });
