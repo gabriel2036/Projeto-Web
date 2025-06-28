@@ -102,3 +102,9 @@ Instalando: npm install bcrypt
 
 ## Next-Auth
 Instalando: npm install next-auth
+
+## Framer-motion
+Instalando: npm install framer-motion
+
+## Axios
+Instalando: npm install axios
