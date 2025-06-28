@@ -31,7 +31,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError('Credenciais inválidas. Tente novamente.');
       } else {
-        router.push('/dashboard');
+        router.push('/interest');
       }
     } catch (error) {
       setError('Ocorreu um erro inesperado.');

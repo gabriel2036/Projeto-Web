@@ -29,7 +29,7 @@ model User {
 // Corresponde à sua tabela 'Interesse' (um filme, gênero, etc.)
 model Interest {
   id       Int      @id @default(autoincrement()) @map("id_interesse")
-  name     String   @map("nome_interesse")
+  name     String   @unique @map("nome_interesse")
   imageUrl String?  @map("imagem_url")
 
   // Relacionamentos
