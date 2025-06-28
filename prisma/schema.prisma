@@ -9,30 +9,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Tabela de usuários
+// Corresponde à sua tabela 'Usuario'
 model User {
-  id        String      @id @default(cuid())
-  email     String      @unique
-  name      String?
-  password  String      // Vamos armazenar o hash da senha aqui
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id       Int      @id @default(autoincrement()) @map("id_user")
+  name     String   @map("nome")
+  email    String   @unique
+  password String   @map("senha")
 
   // Relacionamentos
-  sentFriendRequests     Friendship[] @relation("sentRequests")
-  receivedFriendRequests Friendship[] @relation("receivedRequests")
+  interests      UserInterest[] // Interesses que este usuário marcou
+  matchesAsUser1 Match[]        @relation("User1Matches")
+  matchesAsUser2 Match[]        @relation("User2Matches")
+
+  @@map("usuario") // Mapeia este modelo para a tabela 'usuario' no banco
 }
 
-model Friendship {
-  id        String   @id @default(cuid())
-  senderId  String
-  receiverId String
-  status    String   @default("PENDING") // PENDING, ACCEPTED, DECLINED
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// Tabela de interesses
+// Corresponde à sua tabela 'Interesse' (um filme, gênero, etc.)
+model Interest {
+  id       Int      @id @default(autoincrement()) @map("id_interesse")
+  name     String   @map("nome_interesse")
+  imageUrl String?  @map("imagem_url")
 
   // Relacionamentos
-  sender    User     @relation("sentRequests", fields: [senderId], references: [id])
-  receiver  User     @relation("receivedRequests", fields: [receiverId], references: [id])
+  users UserInterest[]
 
-  @@unique([senderId, receiverId]) // Garante que não haja pedidos duplicados
+  @@map("interesse")
+}
+
+// Tabela de relacionamento entre Usuário e Interesse
+// Corresponde à sua tabela 'Interesse_Usuario'
+model UserInterest {
+  userId     Int     @map("id_user")
+  interestId Int     @map("id_interesse")
+  type       String? @map("tipo_interesse") // ex: 'like', 'dislike'
+
+  // Relacionamentos com as outras tabelas
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([userId, interestId]) // Chave primária composta
+  @@map("interesse_usuario")
+}
+
+// Tabela de relacionamento entre dois usuários
+// Corresponde à sua tabela 'Match'
+model Match {
+  user1Id Int @map("id_user1")
+  user2Id Int @map("id_user2")
+
+  // Relacionamentos com a tabela User
+  user1 User @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2 User @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  @@id([user1Id, user2Id]) // Chave primária composta
+  @@map("match")
 }
