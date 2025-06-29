@@ -20,7 +20,7 @@ async function getCurrentUserId(session: any) {
 export async function POST(
   request: NextRequest
 ) {
-  // --- CORREÇÃO DEFINITIVA: Extraímos o ID diretamente do URL ---
+  // CORREÇÃO DEFINITIVA: Extraímos o ID diretamente do URL
   const url = new URL(request.url);
   const pathSegments = url.pathname.split('/');
   const sessionId = parseInt(pathSegments[3], 10);

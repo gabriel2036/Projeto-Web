@@ -20,9 +20,9 @@ async function getCurrentUserId(session: any) {
 export async function GET(
   request: NextRequest
 ) {
-  // --- CORREÇÃO DEFINITIVA: Extraímos o ID diretamente do URL ---
+  // CORREÇÃO DEFINITIVA: Extraímos o ID diretamente do URL
   const url = new URL(request.url);
-  const pathSegments = url.pathname.split('/'); // ex: ['', 'api', 'match', '12', 'status']
+  const pathSegments = url.pathname.split('/'); // ex: ['', 'api', 'match', '12']
   const sessionId = parseInt(pathSegments[3], 10); // O ID da sessão é o 4º segmento
 
   const session = await getServerSession(authOptions);

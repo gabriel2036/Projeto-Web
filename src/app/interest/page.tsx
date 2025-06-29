@@ -2,35 +2,36 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { useSession } from "next-auth/react";
-import Drawer from "../../components/DrawerLateral"; // Verifique se este caminho está correto
+import Drawer from "../../components/DrawerLateral";
 
-// Define o tipo para um objeto de filme vindo da nossa API
+// Tipos atualizados
 type Movie = {
   id: number;
   title: string;
   poster_path: string;
 };
 
+type MovieDetails = Movie & {
+  overview: string;
+};
+
 export default function InterestsPage() {
   const { data: session, status } = useSession();
+  // CORREÇÃO: Garante que tanto 'isOpen' como 'setIsOpen' são declarados.
   const [isOpen, setIsOpen] = useState(false);
   const [interesses, setInteresses] = useState<string[]>([]);
-  
-  // Estados para os filmes, pesquisa e erros
+  const [modalAberto, setModalAberto] = useState(false);
+  const [filmeSelecionado, setFilmeSelecionado] = useState<MovieDetails | null>(null);
+  const [isModalLoading, setIsModalLoading] = useState(false);
   const [displayedMovies, setDisplayedMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoadingMovies, setIsLoadingMovies] = useState(true);
-  const [apiError, setApiError] = useState<string | null>(null); // NOVO: Estado para erros
-
-  // Outros estados para o modal
-  const [modalAberto, setModalAberto] = useState(false);
-  const [filmeSelecionado, setFilmeSelecionado] = useState<Movie | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const [mostrarSoInteresses, setMostrarSoInteresses] = useState(false);
 
-  // Função para buscar os filmes populares
+
   const fetchPopularMovies = async () => {
-    setIsLoadingMovies(true);
-    setApiError(null); // Limpa erros antigos
+    setIsModalLoading(true);
+    setApiError(null);
     try {
       const response = await fetch('/api/movies');
       if (!response.ok) {
@@ -40,18 +41,16 @@ export default function InterestsPage() {
       setDisplayedMovies(data);
     } catch (error) {
       console.error("Erro ao buscar filmes populares:", error);
-      setApiError("Não foi possível carregar os filmes. Verifique o console para mais detalhes.");
+      setApiError("Não foi possível carregar os filmes.");
     } finally {
-      setIsLoadingMovies(false);
+      setIsModalLoading(false);
     }
   };
 
-  // Busca os filmes populares na primeira vez que o componente carrega
   useEffect(() => {
     fetchPopularMovies();
   }, []); 
 
-  // Busca os interesses do utilizador quando ele está autenticado
   useEffect(() => {
     if (status === "authenticated") {
       const fetchInteresses = async () => {
@@ -69,15 +68,13 @@ export default function InterestsPage() {
     }
   }, [status]);
 
-  // Função para lidar com a pesquisa de filmes
   const handleSearchSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!searchQuery.trim()) {
       fetchPopularMovies();
       return;
     }
-
-    setIsLoadingMovies(true);
+    setIsModalLoading(true);
     setApiError(null);
     try {
       const response = await fetch(`/api/movies?query=${encodeURIComponent(searchQuery)}`);
@@ -88,13 +85,12 @@ export default function InterestsPage() {
       setDisplayedMovies(data);
     } catch (error) {
       console.error("Erro ao pesquisar filmes:", error);
-      setApiError("A pesquisa falhou. Verifique se a API está a funcionar corretamente.");
+      setApiError("A pesquisa falhou.");
     } finally {
-      setIsLoadingMovies(false);
+      setIsModalLoading(false);
     }
   };
 
-  // Funções completas para adicionar e remover interesses
   const adicionarInteresse = async (filme: Movie) => {
     if (interesses.includes(filme.title)) return;
     const novosInteresses = [...interesses, filme.title];
@@ -126,9 +122,23 @@ export default function InterestsPage() {
     }
   };
 
-  const abrirModal = (filme: Movie) => {
-    setFilmeSelecionado(filme);
+  const abrirModal = async (filme: Movie) => {
     setModalAberto(true);
+    setIsModalLoading(true);
+    try {
+        const response = await fetch(`/api/movies?id=${filme.id}`);
+        if(response.ok) {
+            const details = await response.json();
+            setFilmeSelecionado(details);
+        } else {
+            setFilmeSelecionado({ ...filme, overview: 'Não foi possível carregar a descrição.' });
+        }
+    } catch (error) {
+        console.error("Erro ao buscar detalhes do filme:", error);
+        setFilmeSelecionado({ ...filme, overview: 'Erro ao carregar a descrição.' });
+    } finally {
+        setIsModalLoading(false);
+    }
   };
 
   const fecharModal = () => {
@@ -150,7 +160,7 @@ export default function InterestsPage() {
 
   return (
     <div className="min-h-screen bg-[#0e0e13] text-[#7471D9] font-sans overflow-x-hidden relative">
-      <Drawer isOpen={isOpen} onClose={() => setIsOpen(false)} userName={session.user?.name || ''} />
+      <Drawer isOpen={isOpen} onClose={() => setIsOpen(false)} userName={session?.user?.name || ''} />
 
       {!isOpen && (
         <button onClick={() => setIsOpen(true)} aria-label="Abrir menu" className="fixed top-10 left-10 z-50 bg-[#2f2a51] p-3 rounded-2xl shadow-lg border border-[#7471D9] hover:scale-105 transition-transform duration-200">
@@ -181,7 +191,7 @@ export default function InterestsPage() {
           </form>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 justify-items-center">
-            {isLoadingMovies ? (
+            {isModalLoading ? (
               <p className="col-span-full text-center text-lg">A carregar filmes...</p>
             ) : apiError ? (
               <p className="col-span-full text-center text-lg text-red-400">{apiError}</p>
@@ -217,19 +227,57 @@ export default function InterestsPage() {
         </div>
       </div>
       
-      {modalAberto && filmeSelecionado && (
-        <div onClick={fecharModal} className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div onClick={(e) => e.stopPropagation()} className="bg-[#1F1F26] text-white p-6 rounded-2xl shadow-xl w-[90%] max-w-md relative">
-            <h2 className="text-2xl font-bold mb-4">{filmeSelecionado.title}</h2>
-            <p className="text-sm text-[#A8A4F8] mb-6">Em breve: mais detalhes sobre este filme!</p>
-            <div className="flex flex-col sm:flex-row justify-end gap-4">
-              <button onClick={fecharModal} className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-full">Fechar</button>
-              {!interesses.includes(filmeSelecionado.title) ? (
-                <button onClick={() => { adicionarInteresse(filmeSelecionado); fecharModal(); }} className="bg-[#7471D9] hover:bg-[#5c58c9] px-4 py-2 rounded-full">Adicionar aos interesses</button>
-              ) : (
-                <button onClick={() => { removerInteresse(filmeSelecionado.title); fecharModal(); }} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-full">Remover dos interesses</button>
-              )}
-            </div>
+      {modalAberto && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={fecharModal}
+        >
+          <div
+            className="bg-[#1F1F26] text-white p-6 rounded-2xl shadow-xl w-[90%] max-w-md relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isModalLoading ? (
+                <div className="flex justify-center items-center h-24">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                </div>
+            ) : filmeSelecionado && (
+              <>
+                <h2 className="text-2xl font-bold mb-4">{filmeSelecionado.title}</h2>
+                <p className="text-sm text-gray-300 mb-6 max-h-40 overflow-y-auto custom-scrollbar">
+                  {filmeSelecionado.overview || "Nenhuma descrição disponível."}
+                </p>
+                <div className="flex flex-col sm:flex-row justify-end gap-4">
+                  <button
+                    onClick={fecharModal}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-full"
+                  >
+                    Fechar
+                  </button>
+                  {!interesses.includes(filmeSelecionado.title) ? (
+                    <button
+                      onClick={() => {
+                        // O filme selecionado (MovieDetails) também é um 'Movie', por isso funciona aqui.
+                        adicionarInteresse(filmeSelecionado);
+                        fecharModal();
+                      }}
+                      className="bg-[#7471D9] hover:bg-[#5c58c9] px-4 py-2 rounded-full"
+                    >
+                      Adicionar aos interesses
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        removerInteresse(filmeSelecionado.title);
+                        fecharModal();
+                      }}
+                      className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-full"
+                    >
+                      Remover dos interesses
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

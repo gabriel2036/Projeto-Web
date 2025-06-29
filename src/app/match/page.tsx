@@ -37,7 +37,7 @@ const FadedCard = ({ position }: { position: 'left' | 'right' }) => (
 const FALLBACK_IMAGE_URL = '/placeholder-poster.jpg';
 
 export default function MatchPage() {
-  const { status, data: session } = useSession({ required: true });
+  const { data: session, status } = useSession({ required: true });
   
   // --- Estados ---
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -51,7 +51,7 @@ export default function MatchPage() {
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const x = useMotionValue(0);
 
-  // --- Funções e Efeitos (sem alterações na lógica interna) ---
+  // --- Funções e Efeitos ---
   useEffect(() => {
     const fetchFriends = async () => {
       try {
@@ -62,6 +62,7 @@ export default function MatchPage() {
     fetchFriends();
   }, []);
 
+  // Polling para verificar o status do match
   useEffect(() => {
     if (!matchSession || matchedMovie) return;
     const intervalId = setInterval(async () => {
@@ -70,12 +71,14 @@ export default function MatchPage() {
         const response = await fetch(`/api/match/${matchSession.id}/status`);
         const data = await response.json();
         if (data.status === 'COMPLETED' && data.movie) {
+          // --- LÓGICA ATUALIZADA AQUI ---
+          // Agora recebemos 'overview' e 'year' diretamente da API de status
           const adaptedMovie: Movie = {
             id: data.movie.id,
             title: data.movie.name,
             poster: data.movie.imageUrl || FALLBACK_IMAGE_URL,
-            year: 0, 
-            overview: "Descrição não disponível.",
+            year: data.movie.year ? parseInt(data.movie.year, 10) : 0, 
+            overview: data.movie.overview || "Descrição não disponível.",
           };
           setMatchedMovie(adaptedMovie);
         }
@@ -118,7 +121,7 @@ export default function MatchPage() {
         title: movie.name || "Título Desconhecido",
         year: movie.year ? parseInt(movie.year, 10) : 0,
         poster: movie.imageUrl || FALLBACK_IMAGE_URL,
-        overview: "Descrição não disponível.",
+        overview: "Descrição não disponível.", // A lista inicial não precisa da descrição
       }));
 
       setMatchSession({ id: sessionId, movies: adaptedMovies, currentMovieIndex: 0 });
