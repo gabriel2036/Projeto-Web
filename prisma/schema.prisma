@@ -1,0 +1,139 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Tabela de usuários
+model User {
+  id        Int      @id @default(autoincrement()) @map("id_user")
+  name      String   @map("nome")
+  email     String   @unique
+  password  String   @map("senha")
+
+  // Relacionamentos
+  interests              UserInterest[]
+  sentFriendRequests     Friendship[]     @relation("SentRequests")
+  receivedFriendRequests Friendship[]     @relation("ReceivedRequests")
+  createdMatchSessions   MatchSession[]
+  matchSessions          MatchParticipant[]
+  votes                  MatchVote[]
+  
+  @@map("usuario")
+}
+
+// Tabela de interesses (permanece a mesma)
+model Interest {
+  id        Int      @id @default(autoincrement()) @map("id_interesse")
+  name      String   @unique @map("nome_interesse")
+  imageUrl  String?  @map("imagem_url")
+  users     UserInterest[]
+  matchResults MatchResult[]
+  votes      MatchVote[]
+
+  @@map("interesse")
+}
+
+// Tabela de relacionamento entre Usuário e Interesse (permanece a mesma)
+model UserInterest {
+  userId     Int      @map("id_user")
+  interestId Int      @map("id_interesse")
+  type       String?  @map("tipo_interesse")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([userId, interestId])
+  @@map("interesse_usuario")
+}
+
+// Enum para controlar o status da amizade
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+// Tabela de Amizades para gerir os pedidos
+model Friendship {
+  requesterId Int @map("id_requester")
+  addresseeId Int @map("id_addressee")
+  status      FriendshipStatus @default(PENDING)
+  requester   User             @relation("SentRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User             @relation("ReceivedRequests", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@id([requesterId, addresseeId])
+  @@map("friendship")
+}
+
+
+// --- MODELOS PARA AS SESSÕES DE MATCH ---
+
+enum MatchAction {
+  ACCEPTED
+  DECLINED
+}
+
+// NOVO Enum para o status da sessão de match
+enum MatchSessionStatus {
+  VOTING
+  COMPLETED
+}
+
+// Representa uma sessão de votação de filmes
+model MatchSession {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now()) @map("created_at")
+  status    MatchSessionStatus @default(VOTING) // CORREÇÃO: Usa o Enum MatchSessionStatus
+  creatorId Int      @map("creator_id")
+  creator   User     @relation(fields: [creatorId], references: [id])
+  participants MatchParticipant[]
+  votes      MatchVote[]
+  results      MatchResult[]
+
+  @@map("match_session")
+}
+
+
+// Tabela para ligar os utilizadores a uma sessão de match
+model MatchParticipant {
+  sessionId Int @map("session_id")
+  userId    Int @map("user_id")
+  session   MatchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, userId])
+  @@map("match_participant")
+}
+
+// NOVA TABELA: Regista cada voto individual de um utilizador num filme dentro de uma sessão
+model MatchVote {
+  sessionId  Int @map("session_id")
+  userId     Int @map("user_id")
+  interestId Int @map("interest_id")
+
+  action     MatchAction // ACCEPTED ou DECLINED
+
+  session  MatchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest Interest     @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, userId, interestId])
+  @@map("match_vote")
+}
+
+
+// Tabela para guardar os filmes que deram "match" numa sessão
+model MatchResult {
+  sessionId  Int @map("session_id")
+  interestId Int @map("interest_id")
+  session    MatchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  interest   Interest     @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, interestId])
+  @@map("match_result")
+}
