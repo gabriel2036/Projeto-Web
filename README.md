@@ -1,41 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# YouVerse 🎮
 
-## Getting Started
+Este é um projeto [Next.js](https://nextjs.org) criado com [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-First, run the development server:
+## 🚀 Primeiros Passos
+
+Execute o servidor de desenvolvimento:
 
 ```bash
 npm run dev
-# or
+# ou
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000) para ver a aplicação no navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🧠 Sobre o Projeto
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+O **YouVerse** é uma plataforma para encontrar filmes que combinam com você e seus amigos. Usando swipes (como em apps de relacionamento), você pode encontrar o "match cinematográfico perfeito" com base em interesses em comum.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-### Project Organization
+## 📦 Estrutura do Projeto
 
 ```tree
 /
@@ -87,24 +70,73 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 └── ... (outros arquivos de configuração: next.config.mjs, tailwind.config.ts, etc.)
 ```
 
-### Importante!!
+---
 
-Senha do db: StrongPassword123
+## ⚙️ Setup do Projeto
 
-## Prisma
-Instalando o prisma: npm install prisma --save-dev
-Rodando o prisma: npx prisma init
-Migrando: npx prisma migrate dev
+### 1. Pré-requisitos
 
-## Bcrypt
-Instalando: npm install bcrypt
-            npm install --save-dev @types/bcrypt
+- Node.js v18 ou superior
+- npm ou yarn
+- Conta no [Supabase](https://supabase.com)
 
-## Next-Auth
-Instalando: npm install next-auth
+### 2. Clonar o repositório
 
-## Framer-motion
-Instalando: npm install framer-motion
+```bash
+git clone https://github.com/seu-usuario/seu-repositorio.git
+cd seu-repositorio
+```
 
-## Axios
-Instalando: npm install axios
+### 3. Rodar o setup automático
+
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+Ou manualmente:
+
+```bash
+npm install
+npx prisma generate
+npx prisma migrate deploy
+npm run dev
+```
+
+---
+
+## 🔐 Variáveis de Ambiente
+
+Confira o arquivo `.env.example` para as variáveis necessárias:
+
+```dotenv
+DATABASE_URL="..."
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="..."
+TMDB_API_KEY="..."
+```
+
+---
+
+## 📚 Tecnologias
+
+- [Next.js](https://nextjs.org)
+- [Prisma ORM](https://www.prisma.io)
+- [Next-Auth](https://next-auth.js.org)
+- [Supabase](https://supabase.com)
+- [TMDB API](https://www.themoviedb.org/documentation/api)
+- [Tailwind CSS](https://tailwindcss.com)
+- [Framer Motion](https://www.framer.com/motion/)
+
+---
+
+## ☁️ Deploy
+
+Recomendado: [Vercel](https://vercel.com)
+
+Siga a [documentação oficial do Next.js](https://nextjs.org/docs/app/building-your-application/deploying) para mais detalhes.
+
+---
+
+Feito com 💜 para encontrar filmes inesquecíveis com amigos!
+
