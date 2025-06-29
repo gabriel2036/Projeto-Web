@@ -181,7 +181,15 @@ export default function MatchPage() {
             </button>
           )}
 
-          <MatchModal movie={matchedMovie} friendName={selectedFriend?.name || null} onClose={() => setMatchedMovie(null)} />
+          <MatchModal 
+            movie={matchedMovie} 
+            friendName={selectedFriend ? selectedFriend.name : null} 
+            onClose={() => {
+              setMatchedMovie(null); // Limpa o estado do filme que deu match
+              setMatchSession(null); // Opcional, mas recomendado: reseta a sessão
+              setSelectedFriend(null); // Opcional: deseleciona o amigo para poder iniciar um novo match
+            }} 
+          />
       
           <div className="bg-[#1F1F26] rounded-2xl w-full p-6 md:p-8 flex flex-col min-h-full">
             <header className="text-center">
