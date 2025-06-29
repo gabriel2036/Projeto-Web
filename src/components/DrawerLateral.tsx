@@ -233,17 +233,6 @@ export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
           </div>
         </div>
       </div>
-      
-      {/* Botão do sino (flutuante) */}
-      {!isOpen && (
-        <button
-          onClick={onClose} 
-          aria-label="Abrir menu"
-          className="fixed top-10 left-10 z-40 bg-[#2f2a51] p-3 rounded-2xl shadow-xl border border-[#7471D9] hover:scale-105 transition-transform duration-200"
-        >
-          <img src="/sino.png" alt="Abrir menu" className="w-7 h-7" />
-        </button>
-       )}
 
       {/* Modal Procurar Amigo */}
       {modalAberto && (
