@@ -88,7 +88,7 @@ export default function MatchPage() {
       } catch (error) {
         console.error("Erro no polling de status:", error);
       }
-    }, 5000); 
+    }, 1000); 
     return () => clearInterval(intervalId);
   }, [matchSession, matchedMovie]);
 
