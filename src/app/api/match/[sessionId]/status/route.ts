@@ -20,9 +20,8 @@ async function getCurrentUserId(session: any) {
 export async function GET(
   request: NextRequest
 ) {
-  // CORREÇÃO DEFINITIVA: Extraímos o ID diretamente do URL
   const url = new URL(request.url);
-  const pathSegments = url.pathname.split('/'); // ex: ['', 'api', 'match', '12', 'status']
+  const pathSegments = url.pathname.split('/');
   const sessionId = parseInt(pathSegments[3], 10);
 
   const session = await getServerSession(authOptions);
@@ -51,12 +50,26 @@ export async function GET(
     
     if (matchSession.status === 'COMPLETED' && matchSession.results.length > 0) {
       const winningMovie = matchSession.results[0].interest;
+      
+      const apiKey = process.env.TMDB_API_KEY;
+      const tmdbDetailsUrl = `https://api.themoviedb.org/3/movie/${winningMovie.id}?api_key=${apiKey}&language=pt-BR`;
+      const detailsResponse = await fetch(tmdbDetailsUrl);
+      const movieDetails = await detailsResponse.json();
+
+      // --- CORREÇÃO AQUI ---
+      // Verificamos se 'movieDetails.overview' tem conteúdo. Se não, usamos uma mensagem padrão.
+      const overviewText = movieDetails.overview && movieDetails.overview.trim() !== "" 
+        ? movieDetails.overview 
+        : "Oops! Parece que este filme não tem uma descrição disponível em português.";
+
       return NextResponse.json({
         status: 'COMPLETED',
         movie: {
           id: winningMovie.id,
           name: winningMovie.name,
-          imageUrl: winningMovie.imageUrl
+          imageUrl: winningMovie.imageUrl,
+          overview: overviewText, // Usamos o texto verificado
+          year: movieDetails.release_date ? movieDetails.release_date.split("-")[0] : null,
         }
       });
     }

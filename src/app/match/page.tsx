@@ -71,14 +71,14 @@ export default function MatchPage() {
         const response = await fetch(`/api/match/${matchSession.id}/status`);
         const data = await response.json();
         if (data.status === 'COMPLETED' && data.movie) {
-          // --- LÓGICA ATUALIZADA AQUI ---
-          // Agora recebemos 'overview' e 'year' diretamente da API de status
+          // --- CORREÇÃO AQUI ---
+          // Agora usamos os dados de 'overview' e 'year' que vêm da API.
           const adaptedMovie: Movie = {
             id: data.movie.id,
             title: data.movie.name,
             poster: data.movie.imageUrl || FALLBACK_IMAGE_URL,
             year: data.movie.year ? parseInt(data.movie.year, 10) : 0, 
-            overview: data.movie.overview || "Descrição não disponível.",
+            overview: data.movie.overview || "Nenhuma descrição disponível.",
           };
           setMatchedMovie(adaptedMovie);
         }
@@ -121,7 +121,7 @@ export default function MatchPage() {
         title: movie.name || "Título Desconhecido",
         year: movie.year ? parseInt(movie.year, 10) : 0,
         poster: movie.imageUrl || FALLBACK_IMAGE_URL,
-        overview: "Descrição não disponível.", // A lista inicial não precisa da descrição
+        overview: "Descrição não disponível.", // A lista inicial não precisa da descrição completa
       }));
 
       setMatchSession({ id: sessionId, movies: adaptedMovies, currentMovieIndex: 0 });
