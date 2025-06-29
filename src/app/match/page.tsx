@@ -10,8 +10,6 @@ import Drawer from "@/components/DrawerLateral";
 import { useSession } from "next-auth/react";
 
 // --- Interfaces ---
-// CORREÇÃO: Tipos definidos localmente para resolver o erro de importação.
-// Garanta que a definição de 'Movie' no seu arquivo MatchModal.tsx é idêntica a esta.
 interface Movie {
   id: number;
   title: string;
@@ -31,7 +29,7 @@ interface MatchSession {
   currentMovieIndex: number;
 }
 
-// --- Componente para o Card Decorativo ---
+// --- Componentes auxiliares ---
 const FadedCard = ({ position }: { position: 'left' | 'right' }) => (
   <div className={`absolute top-1/2 -translate-y-1/2 w-56 h-[420px] rounded-2xl bg-white/5 transform-gpu blur-md ${position === 'left' ? '-left-20 -rotate-12' : '-right-20 rotate-12'}`}></div>
 );
@@ -39,7 +37,7 @@ const FadedCard = ({ position }: { position: 'left' | 'right' }) => (
 const FALLBACK_IMAGE_URL = '/placeholder-poster.jpg';
 
 export default function MatchPage() {
-  const { data: session } = useSession();
+  const { status, data: session } = useSession({ required: true });
   
   // --- Estados ---
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -47,23 +45,19 @@ export default function MatchPage() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [matchSession, setMatchSession] = useState<MatchSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [matchedMovie, setMatchedMovie] = useState<Movie | null>(null);
   
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const x = useMotionValue(0);
 
-  // --- Funções e Efeitos ---
+  // --- Funções e Efeitos (sem alterações na lógica interna) ---
   useEffect(() => {
     const fetchFriends = async () => {
       try {
         const response = await fetch('/api/friends?type=accepted');
-        if (response.ok) {
-          const data = await response.json();
-          setFriends(data);
-        }
-      } catch (err) {
-        console.error("Erro ao buscar amigos:", err);
-      }
+        if (response.ok) setFriends(await response.json());
+      } catch (err) { console.error("Erro ao buscar amigos:", err); }
     };
     fetchFriends();
   }, []);
@@ -71,27 +65,25 @@ export default function MatchPage() {
   useEffect(() => {
     if (!matchSession || matchedMovie) return;
     const intervalId = setInterval(async () => {
+      if (document.hidden) return;
       try {
         const response = await fetch(`/api/match/${matchSession.id}/status`);
         const data = await response.json();
         if (data.status === 'COMPLETED' && data.movie) {
-          const adaptedMatchedMovie: Movie = {
+          const adaptedMovie: Movie = {
             id: data.movie.id,
             title: data.movie.name,
             poster: data.movie.imageUrl || FALLBACK_IMAGE_URL,
             year: 0, 
             overview: "Descrição não disponível.",
           };
-          setMatchedMovie(adaptedMatchedMovie);
-          clearInterval(intervalId);
+          setMatchedMovie(adaptedMovie);
         }
-      } catch (error) {
-        console.error("Erro no polling de status:", error);
-      }
-    }, 1000); 
+      } catch (error) { console.error("Erro no polling:", error); }
+    }, 2000); 
+    if (matchedMovie) clearInterval(intervalId);
     return () => clearInterval(intervalId);
   }, [matchSession, matchedMovie]);
-
 
   const handleSelectFriend = async (friend: Friend) => {
     if (selectedFriend?.id === friend.id) {
@@ -101,6 +93,7 @@ export default function MatchPage() {
     }
     setSelectedFriend(friend);
     setIsLoading(true);
+    setError(null);
 
     try {
       const startResponse = await fetch('/api/match/start', {
@@ -108,28 +101,29 @@ export default function MatchPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ friendIds: [friend.id] }),
       });
-      const { sessionId } = await startResponse.json();
-
+      const { sessionId, status: sessionStatus } = await startResponse.json();
       if (!sessionId) throw new Error("Não foi possível obter a sessão de match.");
+      
+      if(sessionStatus === 'PENDING') {
+          setMatchSession({ id: sessionId, movies: [], currentMovieIndex: 0 });
+          return;
+      }
 
       const moviesResponse = await fetch(`/api/match/${sessionId}`);
+      if (!moviesResponse.ok) throw new Error("Falha ao carregar os filmes da sessão.");
+
       const moviesData = await moviesResponse.json();
-      
       const adaptedMovies: Movie[] = moviesData.map((movie: any) => ({
         id: movie.id,
-        title: movie.name,
+        title: movie.name || "Título Desconhecido",
         year: movie.year ? parseInt(movie.year, 10) : 0,
         poster: movie.imageUrl || FALLBACK_IMAGE_URL,
         overview: "Descrição não disponível.",
       }));
 
-      setMatchSession({
-        id: sessionId,
-        movies: adaptedMovies,
-        currentMovieIndex: 0,
-      });
-    } catch (err) {
-      console.error("Erro ao iniciar sessão de match:", err);
+      setMatchSession({ id: sessionId, movies: adaptedMovies, currentMovieIndex: 0 });
+    } catch (err: any) {
+      setError(err.message || "Ocorreu um erro.");
       setMatchSession(null);
     } finally {
       setIsLoading(false);
@@ -139,21 +133,23 @@ export default function MatchPage() {
   const handleSwipe = useCallback(async (direction: "left" | "right") => {
     if (!matchSession || swipeDirection) return;
     const movieOnTop = matchSession.movies[matchSession.currentMovieIndex];
+    if (!movieOnTop) return;
     const action = direction === 'right' ? 'ACCEPTED' : 'DECLINED';
     setSwipeDirection(direction);
     try {
       await fetch(`/api/match/${matchSession.id}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          interestId: movieOnTop.id,
-          action: action,
-        }),
+        body: JSON.stringify({ interestId: movieOnTop.id, action }),
       });
-    } catch (err) {
-      console.error("Erro ao enviar voto:", err);
-    }
+    } catch (err) { console.error("Erro ao enviar voto:", err); }
   }, [matchSession, swipeDirection]);
+
+  const handleCloseMatchModal = () => {
+    setMatchedMovie(null);
+    setMatchSession(null);
+    setSelectedFriend(null);
+  };
 
   const handleDragEnd = (_e: any, info: any) => {
     const threshold = 120;
@@ -166,30 +162,30 @@ export default function MatchPage() {
     return title.length > maxLength ? `${title.substring(0, maxLength).trim()}...` : title;
   };
 
+  if (status === "loading") {
+    return <div className="flex h-screen w-full items-center justify-center bg-[#0e0e13] text-white">A carregar...</div>;
+  }
+
   const currentIndex = matchSession?.currentMovieIndex ?? 0;
-  const canSwipe = selectedFriend && matchSession && currentIndex < matchSession.movies.length && !matchedMovie;
+  const canSwipe = !isLoading && !error && matchSession && matchSession.movies.length > 0 && currentIndex < matchSession.movies.length && !matchedMovie;
 
   return (
-    <div className="flex w-full h-screen bg-[#0e0e13] text-[#7471D9] font-sans overflow-hidden">
+    <div className="flex w-full min-h-screen bg-[#0e0e13] font-sans text-[#7471D9]">
       <Drawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} userName={session?.user?.name || ''} />
       
-      <main className={`flex-grow transition-all duration-300 overflow-y-auto ${isDrawerOpen ? "lg:ml-[290px]" : "ml-0"}`}>
+      <main className={`flex-grow transition-all duration-300 ${isDrawerOpen ? "lg:ml-[290px]" : "ml-0"}`}>
         <div className="p-6 md:p-8 w-full h-full">
-          {!isDrawerOpen && (
-            <button onClick={() => setIsDrawerOpen(true)} className="absolute top-6 left-6 z-50 bg-[#2f2a51] p-3 rounded-2xl shadow-lg border border-[#7471D9] hover:scale-105 transition-transform duration-200 lg:hidden">
-              <img src="/sino.png" alt="Abrir menu" className="w-8 h-8" />
-            </button>
-          )}
+            {!isDrawerOpen && (
+              <button 
+                onClick={() => setIsDrawerOpen(true)} 
+                className="fixed top-6 left-6 z-50 bg-[#2f2a51] p-3 rounded-2xl shadow-lg border border-[#7471D9] hover:scale-105 transition-transform duration-200"
+                aria-label="Abrir menu"
+              >
+                <img src="/sino.png" alt="Abrir menu" className="w-8 h-8" />
+              </button>
+            )}
 
-          <MatchModal 
-            movie={matchedMovie} 
-            friendName={selectedFriend ? selectedFriend.name : null} 
-            onClose={() => {
-              setMatchedMovie(null); // Limpa o estado do filme que deu match
-              setMatchSession(null); // Opcional, mas recomendado: reseta a sessão
-              setSelectedFriend(null); // Opcional: deseleciona o amigo para poder iniciar um novo match
-            }} 
-          />
+          <MatchModal movie={matchedMovie} friendName={selectedFriend?.name || null} onClose={handleCloseMatchModal} />
       
           <div className="bg-[#1F1F26] rounded-2xl w-full p-6 md:p-8 flex flex-col min-h-full">
             <header className="text-center">
@@ -200,7 +196,7 @@ export default function MatchPage() {
                 </h1>
               </div>
               <p className="text-md text-[#82829c]">
-                You can see your friends here!
+                Selecione um amigo para começar um Match!
               </p>
               <div className="max-w-md mx-auto mt-6">
                 <div className="relative">
@@ -229,7 +225,13 @@ export default function MatchPage() {
                   
                   <div className="absolute w-64 h-full z-10">
                     {isLoading ? (
-                      <div className="w-full h-full flex items-center justify-center text-xl text-[#A8A4F8]"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>Loading...</div>
+                      <div className="w-full h-full flex items-center justify-center text-xl text-[#A8A4F8]"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>A carregar...</div>
+                    ) : error ? (
+                        <div className="text-center text-red-400 p-4 bg-red-900/20 rounded-lg">{error}</div>
+                    ) : matchSession && matchSession.movies.length === 0 && selectedFriend ? (
+                      <div className="text-center text-[#A8A4F8] flex flex-col items-center justify-center gap-4 h-full">
+                          <p className="text-xl mt-4">Convite enviado! A aguardar que {selectedFriend?.name} aceite.</p>
+                      </div>
                     ) : canSwipe ? (
                       <motion.div
                         key={matchSession.movies[currentIndex].id}
