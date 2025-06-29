@@ -94,7 +94,7 @@ Senha do db: StrongPassword123
 ## Prisma
 Instalando o prisma: npm install prisma --save-dev
 Rodando o prisma: npx prisma init
-Migrando: npx prisma migrate dev --name migration_name
+Migrando: npx prisma migrate dev
 
 ## Bcrypt
 Instalando: npm install bcrypt

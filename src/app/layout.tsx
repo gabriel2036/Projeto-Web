@@ -6,16 +6,21 @@ import { Sofia_Sans } from 'next/font/google';
 import AuthProvider from '@/components/AuthProvider';
 import './globals.css';
 
+export const metadata: Metadata = {
+  title: 'YouVerse',
+  description: 'Encontre o filme perfeito para assistir com seus amigos',
+  icons: {
+    icon: '/sino.png', 
+  },
+};
+
+
 // Passo 2: Configurar a fonte com seus pesos
 const sofia_sans = Sofia_Sans({
   subsets: ['latin'],
   weight: ['300', '400', '600', '700'],
 });
 
-export const metadata: Metadata = {
-  title: 'YouVerse',
-  description: 'Encontre o filme perfeito para assistir com seus amigos',
-};
 
 export default function RootLayout({
   children,
