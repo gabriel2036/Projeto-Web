@@ -71,8 +71,6 @@ export default function MatchPage() {
         const response = await fetch(`/api/match/${matchSession.id}/status`);
         const data = await response.json();
         if (data.status === 'COMPLETED' && data.movie) {
-          // --- CORREÇÃO AQUI ---
-          // Agora usamos os dados de 'overview' e 'year' que vêm da API.
           const adaptedMovie: Movie = {
             id: data.movie.id,
             title: data.movie.name,
@@ -121,7 +119,7 @@ export default function MatchPage() {
         title: movie.name || "Título Desconhecido",
         year: movie.year ? parseInt(movie.year, 10) : 0,
         poster: movie.imageUrl || FALLBACK_IMAGE_URL,
-        overview: "Descrição não disponível.", // A lista inicial não precisa da descrição completa
+        overview: "Descrição não disponível.", 
       }));
 
       setMatchSession({ id: sessionId, movies: adaptedMovies, currentMovieIndex: 0 });

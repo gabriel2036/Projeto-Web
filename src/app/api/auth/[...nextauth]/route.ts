@@ -15,13 +15,13 @@ export const authOptions = {
         email: { label: 'Email', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
-      // A função authorize é onde a mágica acontece
+
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
-        // 1. Encontrar o usuário no banco de dados pelo email
+
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
@@ -30,14 +30,14 @@ export const authOptions = {
           return null; // Usuário não encontrado
         }
 
-        // 2. Comparar a senha enviada com a senha hasheada no banco
+
         const isPasswordCorrect = await bcrypt.compare(
           credentials.password,
           user.password
         );
 
         if (isPasswordCorrect) {
-          // 3. Se tudo estiver correto, retorne o objeto do usuário
+
           return {
             id: user.id,
             name: user.name,
@@ -53,7 +53,7 @@ export const authOptions = {
     strategy: 'jwt' as const,
   },
   pages: {
-    signIn: '/login', // Redireciona para sua página se o usuário não estiver logado
+    signIn: '/login',
   },
 };
 

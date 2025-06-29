@@ -4,7 +4,6 @@ import { useEffect, useState, FormEvent } from "react";
 import { useSession } from "next-auth/react";
 import Drawer from "../../components/DrawerLateral";
 
-// Tipos atualizados
 type Movie = {
   id: number;
   title: string;
@@ -17,7 +16,6 @@ type MovieDetails = Movie & {
 
 export default function InterestsPage() {
   const { data: session, status } = useSession();
-  // CORREÇÃO: Garante que tanto 'isOpen' como 'setIsOpen' são declarados.
   const [isOpen, setIsOpen] = useState(false);
   const [interesses, setInteresses] = useState<string[]>([]);
   const [modalAberto, setModalAberto] = useState(false);
@@ -256,7 +254,6 @@ export default function InterestsPage() {
                   {!interesses.includes(filmeSelecionado.title) ? (
                     <button
                       onClick={() => {
-                        // O filme selecionado (MovieDetails) também é um 'Movie', por isso funciona aqui.
                         adicionarInteresse(filmeSelecionado);
                         fecharModal();
                       }}

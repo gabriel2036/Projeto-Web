@@ -56,8 +56,6 @@ export async function GET(
       const detailsResponse = await fetch(tmdbDetailsUrl);
       const movieDetails = await detailsResponse.json();
 
-      // --- CORREÇÃO AQUI ---
-      // Verificamos se 'movieDetails.overview' tem conteúdo. Se não, usamos uma mensagem padrão.
       const overviewText = movieDetails.overview && movieDetails.overview.trim() !== "" 
         ? movieDetails.overview 
         : "Oops! Parece que este filme não tem uma descrição disponível em português.";
@@ -68,7 +66,7 @@ export async function GET(
           id: winningMovie.id,
           name: winningMovie.name,
           imageUrl: winningMovie.imageUrl,
-          overview: overviewText, // Usamos o texto verificado
+          overview: overviewText, 
           year: movieDetails.release_date ? movieDetails.release_date.split("-")[0] : null,
         }
       });

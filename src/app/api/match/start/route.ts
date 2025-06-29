@@ -28,18 +28,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { friendIds } = body;
-    const friendId = friendIds[0]; // Assumindo match com apenas um amigo
+    const friendId = friendIds[0]; 
 
     if (!friendId) {
       return NextResponse.json({ error: 'ID do amigo em falta.' }, { status: 400 });
     }
 
-    // --- LÓGICA ATUALIZADA AQUI ---
-    // 1. Procura por uma sessão de match ATIVA entre os dois utilizadores.
     const existingSession = await prisma.matchSession.findFirst({
       where: {
         status: 'VOTING',
-        // Garante que ambos os utilizadores são participantes
         AND: [
           { participants: { some: { userId: currentUserId } } },
           { participants: { some: { userId: friendId } } },
@@ -47,12 +44,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 2. Se uma sessão ativa for encontrada, devolve o ID dela.
     if (existingSession) {
       return NextResponse.json({ sessionId: existingSession.id }, { status: 200 });
     }
 
-    // 3. Se não houver sessão ativa, cria uma nova (lógica antiga).
     const newMatchSession = await prisma.$transaction(async (tx) => {
       const session = await tx.matchSession.create({
         data: {

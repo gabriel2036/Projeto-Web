@@ -6,7 +6,7 @@ import { useState, InputHTMLAttributes } from 'react';
 // Define os tipos das propriedades que o componente vai aceitar
 type FloatingLabelInputProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
-  endIcon?: React.ReactNode; // Ícone opcional para o final do campo (ex: olho)
+  endIcon?: React.ReactNode; 
 };
 
 export default function FloatingLabelInput({

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get('type'); 
 
   try {
-    // Listar pedidos de amizade pendentes para o utilizador atual
+    // Listar pedidos de amizade pendentes
     if (type === 'requests') {
       const requests = await prisma.friendship.findMany({
         where: { addresseeId: currentUserId, status: 'PENDING' },
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(requests);
     }
     
-    // Listar amigos já ACEITES
+    // Listar amigos já aceitos
     if (type === 'accepted') {
         const friendships = await prisma.friendship.findMany({
             where: {
@@ -68,8 +68,6 @@ export async function GET(request: NextRequest) {
 
     // Procurar por novos utilizadores para adicionar
     if (query) {
-      // --- LÓGICA ATUALIZADA AQUI ---
-      // 1. Encontrar todos os IDs de utilizadores com quem já existe uma ligação
       const existingFriendships = await prisma.friendship.findMany({
         where: {
           OR: [
@@ -80,16 +78,14 @@ export async function GET(request: NextRequest) {
         select: { requesterId: true, addresseeId: true },
       });
 
-      // 2. Criar uma lista de todos os IDs a serem excluídos da pesquisa
       const idsToExclude = existingFriendships.flatMap(f => [f.requesterId, f.addresseeId]);
-      idsToExclude.push(currentUserId); // Garante que o próprio utilizador nunca aparece
+      idsToExclude.push(currentUserId); 
       const uniqueIdsToExclude = [...new Set(idsToExclude)];
       
       const users = await prisma.user.findMany({
         where: {
           AND: [
             { name: { contains: query, mode: 'insensitive' } },
-            // 3. A pesquisa agora exclui todos os IDs da lista que criámos
             { id: { notIn: uniqueIdsToExclude } } 
           ]
         },
@@ -107,7 +103,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Enviar um novo pedido de amizade (sem alterações)
+// POST: Enviar um novo pedido de amizade 
 export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const requesterId = await getCurrentUserId(session);
@@ -133,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// PUT: Aceitar ou RECUSAR um pedido de amizade (sem alterações)
+// PUT: Aceitar ou RECUSAR um pedido de amizade 
 export async function PUT(request: NextRequest) {
     const session = await getServerSession(authOptions);
     const currentUserId = await getCurrentUserId(session);

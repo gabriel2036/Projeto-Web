@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/route'; // Importa as opções de autenticação
+import { authOptions } from '../auth/[...nextauth]/route'; 
 
 const prisma = new PrismaClient();
 
@@ -15,14 +15,12 @@ export async function GET() {
   }
 
   try {
-    // Encontra o utilizador no banco de dados
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: {
-        // Inclui os interesses relacionados a este utilizador
         interests: {
           include: {
-            interest: true, // Inclui os detalhes de cada interesse (nome, imagem, etc.)
+            interest: true, 
           },
         },
       },
@@ -32,7 +30,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 });
     }
 
-    // Mapeia o resultado para devolver apenas o nome de cada interesse
     const interestNames = user.interests.map(userInterest => userInterest.interest.name);
     return NextResponse.json(interestNames);
 
@@ -42,7 +39,7 @@ export async function GET() {
   }
 }
 
-// POST: Função para adicionar um novo interesse para o utilizador
+// POST: Função para adicionar um novo interesse 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
 
@@ -51,41 +48,37 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { name, imageUrl } = await request.json(); // Espera receber o nome e a URL da imagem do filme
+    const { name, imageUrl } = await request.json(); 
     
-    // Encontra o ID do utilizador
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) {
       return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 });
     }
 
-    // Procura se o interesse (filme) já existe na tabela 'Interest'.
-    // Se não existir, cria um novo. A função 'upsert' faz isso automaticamente.
     const interest = await prisma.interest.upsert({
       where: { name: name },
-      update: {}, // Não atualiza nada se já existir
+      update: {}, 
       create: { name: name, imageUrl: imageUrl },
     });
 
-    // Cria a ligação na tabela 'UserInterest'
+
     await prisma.userInterest.create({
       data: {
         userId: user.id,
         interestId: interest.id,
-        type: 'like', // Podemos definir um tipo, como 'like'
+        type: 'like',
       },
     });
 
     return NextResponse.json({ message: 'Interesse adicionado com sucesso' }, { status: 201 });
 
   } catch (error) {
-    // Se a ligação já existir, o prisma dará um erro. Podemos tratá-lo como um sucesso silencioso.
     console.log("Aviso: Tentativa de adicionar interesse duplicado.");
     return NextResponse.json({ message: 'Interesse já existia' }, { status: 200 });
   }
 }
 
-// DELETE: Função para remover um interesse do utilizador
+// DELETE: Função para remover um interesse 
 export async function DELETE(request: Request) {
     const session = await getServerSession(authOptions);
 
@@ -94,7 +87,7 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const { name } = await request.json(); // Espera receber o nome do interesse a ser removido
+    const { name } = await request.json(); 
 
     const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     if (!user) return NextResponse.json({ error: 'Utilizador não encontrado' }, { status: 404 });
@@ -102,7 +95,6 @@ export async function DELETE(request: Request) {
     const interest = await prisma.interest.findUnique({ where: { name } });
     if (!interest) return NextResponse.json({ error: 'Interesse não encontrado' }, { status: 404 });
 
-    // Remove a ligação na tabela 'UserInterest'
     await prisma.userInterest.delete({
       where: {
         userId_interestId: {

@@ -2,13 +2,12 @@
 
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt'; // Para hash de senhas
+import bcrypt from 'bcrypt'; 
 
 // Inicializa o cliente do Prisma
 const prisma = new PrismaClient();
 
 // Função para lidar com requisições GET
-// Objetivo: Listar todos os usuários do banco
 export async function GET() {
   try {
     const users = await prisma.user.findMany();
@@ -20,7 +19,6 @@ export async function GET() {
 }
 
 // Função para lidar com requisições POST
-// Objetivo: Criar um novo usuário no banco
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -35,7 +33,6 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      // Usa o status 409 Conflict para indicar que o recurso já existe
       return NextResponse.json({ error: 'Este email já está em uso.' }, { status: 409 });
     }
 
@@ -46,7 +43,7 @@ export async function POST(request: Request) {
       data: {
         email,
         name,
-        password: hashedPassword, // Salve a senha hasheada
+        password: hashedPassword, 
       },
     });
 

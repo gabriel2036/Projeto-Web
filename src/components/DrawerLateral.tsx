@@ -19,15 +19,13 @@ type SearchedUser = {
   email: string;
 };
 
-// CORREÇÃO AQUI: Adicionamos a prop 'userName' de volta
 type DrawerProps = {
   isOpen: boolean;
   onClose: () => void;
-  userName?: string; // Propriedade para receber o nome do utilizador
+  userName?: string; 
 };
 
 export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
-  // O componente agora não precisa do seu próprio useSession, pois recebe o nome por prop.
   const router = useRouter();
 
   // Estados para os dados reais
@@ -64,7 +62,7 @@ export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
     }
   }, [isOpen]);
 
-  // Efeito para procurar utilizadores quando o texto da pesquisa muda
+  // Efeito para procurar ususarios quando o texto da pesquisa muda
   useEffect(() => {
     if (pesquisaModal.trim().length > 2) { 
       const searchUsers = async () => {
