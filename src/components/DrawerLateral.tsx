@@ -161,7 +161,7 @@ export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
               <Heart className="w-5 h-5" />
               <span>Match</span>
             </button>
-            <button onClick={() => router.push('/interests')} className="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-[#413c72] hover:text-white transition">
+            <button onClick={() => router.push('/interest')} className="flex items-center gap-3 py-2 px-4 rounded-xl hover:bg-[#413c72] hover:text-white transition">
               <Star className="w-5 h-5" />
               <span>Interests</span>
             </button>

@@ -78,11 +78,17 @@ enum MatchAction {
   DECLINED
 }
 
+// NOVO Enum para o status da sessão de match
+enum MatchSessionStatus {
+  VOTING
+  COMPLETED
+}
+
 // Representa uma sessão de votação de filmes
 model MatchSession {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now()) @map("created_at")
-  status    String   @default("VOTING") // ex: VOTING, COMPLETED
+  status    MatchSessionStatus @default(VOTING) // CORREÇÃO: Usa o Enum MatchSessionStatus
   creatorId Int      @map("creator_id")
   creator   User     @relation(fields: [creatorId], references: [id])
   participants MatchParticipant[]
@@ -91,6 +97,7 @@ model MatchSession {
 
   @@map("match_session")
 }
+
 
 // Tabela para ligar os utilizadores a uma sessão de match
 model MatchParticipant {

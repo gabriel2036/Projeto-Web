@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
 interface Movie {
+  id: number;
   title: string;
-  year: number;
+  year: number; 
   poster: string;
   overview: string;
 }
+
 
 interface MatchModalProps {
   movie: Movie | null;
