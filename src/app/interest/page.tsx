@@ -184,8 +184,8 @@ export default function InterestsPage() {
 
         <div className={`transition-all duration-300 p-6 ${isOpen ? "ml-[280px]" : "ml-0"}`}>
           <div className="bg-[#1F1F26] rounded-[36px] max-w-[1850px] mx-auto p-8 relative shadow-lg">
-            <h1 className="text-center text-4xl md:text-5xl lg:text-6xl font-bold mb-2 text-[#A8A4F8]">
-              Let’s build your <span className="text-[#A8A4F8]">YouVerse</span>
+            <h1 className="text-center md:text-5xl lg:text-6xl font-bold mb-2 text-white">
+                  Lets build your <span className="text-[#A8A4F8]">YouVerse</span>
             </h1>
             <p className="text-center text-lg md:text-xl mb-6 text-[#A8A4F8]">
               Choose the films that interest you the most

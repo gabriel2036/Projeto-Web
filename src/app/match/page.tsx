@@ -162,8 +162,8 @@ export default function MatchPage() {
   return (
     <div className="flex w-full min-h-screen bg-[#0e0e13] font-sans text-[#7471D9]">
       <Drawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} userName={session?.user?.name || ''} />
-      <main className={`flex-grow transition-all duration-300 ${isDrawerOpen ? "lg:ml-[290px]" : "ml-0"}`}>
-        <div className="p-6 md:p-8 w-full h-full">
+      <main className={`flex-grow transition-all duration-300 ${isDrawerOpen ? "lg:ml-[272px]" : "ml-0"}`}>
+        <div className="p- md:p-8 w-full h-full">
           {!isDrawerOpen && (
             <button
               onClick={() => setIsDrawerOpen(true)}
@@ -178,9 +178,9 @@ export default function MatchPage() {
           <div className="bg-[#1F1F26] rounded-2xl w-full p-6 md:p-8 flex flex-col min-h-full">
             <header className="text-center">
               <div className="flex justify-center items-center gap-3 mb-2">
-                <Swords className="w-8 h-8 text-[#A8A4F8]" />
-                <h1 className="text-3xl md:text-4xl font-bold text-white">
-                  Invite someone to your <span className="text-[#A8A4F8]">YouVerse</span>.
+                <Swords className="w-12 h-12 text-[#A8A4F8]" />
+                <h1 className="text-center md:text-5xl lg:text-6xl font-bold mb-2 text-white">
+                  Invite someone to your <span className="text-[#A8A4F8]">YouVerse</span>
                 </h1>
               </div>
               <p className="text-md text-[#82829c]">Selecione um amigo para começar um Match!</p>
@@ -255,7 +255,7 @@ export default function MatchPage() {
                           }
                         }}
                       >
-                        <Card className="w-full h-full overflow-hidden flex flex-col bg-black border-none shadow-xl shadow-black/40 rounded-3xl relative">
+                        <Card className="mt-6 w-full h-full overflow-hidden flex flex-col bg-black border-none shadow-xl shadow-black/40 rounded-3xl relative">
                           <div className="w-full h-full">
                             <img
                               src={matchSession.movies[currentIndex].poster}
@@ -264,7 +264,7 @@ export default function MatchPage() {
                             />
                             <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-black via-black/50 to-transparent transition-all duration-700 ease-in-out" />
                           </div>
-                          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-6 z-20">
+                          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-6 z-20">
                             <button
                               onClick={() => handleSwipe("left")}
                               className="w-14 h-14 rounded-full bg-red-600/80 backdrop-blur-md hover:bg-red-600 hover:scale-130 transition-all flex items-center justify-center border-2 border-white/10 shadow-md"
@@ -273,10 +273,10 @@ export default function MatchPage() {
                             </button>
                             <button
                               onClick={handleShowMovieInfo}
-                              className="w-14 h-14 rounded-full bg-gray-500/80 backdrop-blur-md hover:bg-gray-500 hover:scale-110 transition-all flex items-center justify-center border-2 border-white/10 shadow-md"
+                              className="mt-3 w-11 h-11 rounded-full bg-gray-500/30 backdrop-blur-md hover:bg-gray-500/60 hover:scale-110 transition-all flex items-center justify-center border-2 border-white/10 shadow-md"
                               aria-label="Mais informações"
                             >
-                              <Info className="w-6 h-6 text-white" />
+                              <Info className="w-5 h-5 text-white" />
                             </button>
                             <button
                               onClick={() => handleSwipe("right")}
