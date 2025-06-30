@@ -166,3 +166,34 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'Não foi possível responder ao pedido.' }, { status: 500 });
     }
 }
+// DELETE: Desfazer amizade
+export async function DELETE(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const currentUserId = await getCurrentUserId(session);
+
+  if (!currentUserId) {
+    return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
+  const { friendId } = await request.json();
+
+  if (!friendId) {
+    return NextResponse.json({ error: "ID do amigo não fornecido" }, { status: 400 });
+  }
+
+  try {
+    await prisma.friendship.deleteMany({
+      where: {
+        OR: [
+          { requesterId: currentUserId, addresseeId: friendId },
+          { requesterId: friendId, addresseeId: currentUserId },
+        ],
+      },
+    });
+
+    return NextResponse.json({ message: "Amizade desfeita com sucesso." });
+  } catch (error) {
+    console.error("Erro ao desfazer amizade:", error);
+    return NextResponse.json({ error: "Erro ao desfazer amizade." }, { status: 500 });
+  }
+}

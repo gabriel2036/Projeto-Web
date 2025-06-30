@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Heart, Star, LogOut, User, X, Check, Search } from "lucide-react";
+import { Heart, Star, LogOut, User, X, Check, Search, Trash } from "lucide-react";
 
 type PendingRequest = {
   requester: { id: number; name: string };
@@ -26,7 +26,7 @@ type DrawerProps = {
 
 export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
   const router = useRouter();
-  const pathname = usePathname(); // 👈 identifica a página atual
+  const pathname = usePathname();
 
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
@@ -129,6 +129,29 @@ export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
     }
   };
 
+  const handleUnfriend = async (friendId: number) => {
+    const confirm = window.confirm(
+      "Tem certeza que deseja desfazer essa amizade?"
+    );
+    if (!confirm) return;
+
+    try {
+      const response = await fetch("/api/friends", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ friendId }),
+      });
+
+      if (response.ok) {
+        setFriends(friends.filter((f) => f.id !== friendId));
+      } else {
+        console.error("Erro ao desfazer amizade");
+      }
+    } catch (error) {
+      console.error("Erro de rede ao desfazer amizade:", error);
+    }
+  };
+
   return (
     <>
       <div
@@ -153,7 +176,6 @@ export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
             </button>
           </div>
 
-          {/* Navegação */}
           <nav className="flex flex-col gap-3 text-[#C9C6FF] text-sm font-medium">
             <button
               onClick={() => router.push("/match")}
@@ -186,7 +208,6 @@ export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
             </button>
           </nav>
 
-          {/* Amigos e convites */}
           <div className="flex-grow flex flex-col gap-4 overflow-y-auto custom-scrollbar -mr-4 pr-4">
             <div className="border-t border-[#4a447a] pt-4 flex flex-col">
               <h2 className="text-sm font-semibold text-[#C9C6FF] mb-2 flex items-center gap-2">
@@ -197,12 +218,21 @@ export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
                   friends.map((friend) => (
                     <div
                       key={friend.id}
-                      className="flex items-center bg-[#413c72] px-3 py-2 rounded-xl text-white shadow-sm"
+                      className="flex items-center justify-between bg-[#413c72] px-3 py-2 rounded-xl text-white shadow-sm"
                     >
-                      <span className="w-2 h-2 bg-green-400 rounded-full mr-3 flex-shrink-0"></span>
-                      <span className="text-sm font-medium truncate">
-                        {friend.name}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 bg-green-400 rounded-full" />
+                        <span className="text-sm font-medium truncate">
+                          {friend.name}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleUnfriend(friend.id)}
+                        title="Desfazer amizade"
+                        className="transition hover:text-red-500 text-gray-300"
+                      >
+                        <Trash className="w-4 h-4" />
+                      </button>
                     </div>
                   ))
                 ) : (
@@ -259,7 +289,6 @@ export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
           </div>
         </div>
 
-        {/* Rodapé */}
         <div className="flex flex-col items-center gap-4 text-[#C9C6FF] pt-4 border-t border-[#4a447a]">
           <button
             onClick={handleLogout}
@@ -277,7 +306,6 @@ export default function Drawer({ isOpen, onClose, userName }: DrawerProps) {
         </div>
       </div>
 
-      {/* Modal Procurar Amigo */}
       {modalAberto && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
