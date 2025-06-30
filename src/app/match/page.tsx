@@ -179,7 +179,7 @@ export default function MatchPage() {
             {!isDrawerOpen && (
               <button 
                 onClick={() => setIsDrawerOpen(true)} 
-                className="fixed top-6 left-6 z-50 bg-[#2f2a51] p-3 rounded-2xl shadow-lg border border-[#7471D9] hover:scale-105 transition-transform duration-200"
+                className="fixed top-10 left-10 z-50 bg-[#2f2a51] p-3 rounded-2xl shadow-lg border border-[#7471D9] hover:scale-105 transition-transform duration-200"
                 aria-label="Abrir menu"
               >
                 <img src="/sino.png" alt="Abrir menu" className="w-8 h-8" />
