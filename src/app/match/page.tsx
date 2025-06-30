@@ -37,7 +37,7 @@ const FadedCard = ({ position }: { position: 'left' | 'right' }) => (
 const FALLBACK_IMAGE_URL = '/placeholder-poster.jpg';
 
 export default function MatchPage() {
-  const { data: session, status } = useSession({ required: true });
+  const { status, data: session } = useSession({ required: true });
   
   // --- Estados ---
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -51,7 +51,7 @@ export default function MatchPage() {
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const x = useMotionValue(0);
 
-  // --- Funções e Efeitos ---
+  // --- Funções e Efeitos (sem alterações na lógica interna) ---
   useEffect(() => {
     const fetchFriends = async () => {
       try {
@@ -62,7 +62,6 @@ export default function MatchPage() {
     fetchFriends();
   }, []);
 
-  // Polling para verificar o status do match
   useEffect(() => {
     if (!matchSession || matchedMovie) return;
     const intervalId = setInterval(async () => {
@@ -75,8 +74,8 @@ export default function MatchPage() {
             id: data.movie.id,
             title: data.movie.name,
             poster: data.movie.imageUrl || FALLBACK_IMAGE_URL,
-            year: data.movie.year ? parseInt(data.movie.year, 10) : 0, 
-            overview: data.movie.overview || "Nenhuma descrição disponível.",
+            year: 0, 
+            overview: "Descrição não disponível.",
           };
           setMatchedMovie(adaptedMovie);
         }
@@ -119,7 +118,7 @@ export default function MatchPage() {
         title: movie.name || "Título Desconhecido",
         year: movie.year ? parseInt(movie.year, 10) : 0,
         poster: movie.imageUrl || FALLBACK_IMAGE_URL,
-        overview: "Descrição não disponível.", 
+        overview: "Descrição não disponível.",
       }));
 
       setMatchSession({ id: sessionId, movies: adaptedMovies, currentMovieIndex: 0 });
