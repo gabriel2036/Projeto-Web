@@ -184,36 +184,36 @@ export default function MatchPage() {
                 </h1>
               </div>
               <p className="text-md text-[#82829c]">Selecione um amigo para começar um Match!</p>
-              <div className="max-w-md mx-auto mt-6">
-                <div className="relative">
-                  <Input
-                    placeholder="Search in your friend list..."
-                    className="pl-5 pr-12 h-12 bg-[#282845] text-white placeholder-gray-400 border-2 border-transparent rounded-full focus:ring-2 focus:ring-[#7471D9] focus:border-[#7471D9]"
-                  />
-                  <Search className="absolute top-1/2 right-5 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            </header>
+            <div className="flex-1 flex flex-col md:flex-row gap-8 items-center justify-center mt-2">
+              <aside className="w-full md:w-64 flex-shrink-0">
+              <div className="mb-4">
+                <div className="relative -top-25 left-0">
+                <Input
+                  placeholder="Search in your friend list..."
+                  className="pl-5 pr-12 h-10 bg-[#282845] text-white placeholder-gray-400 border border-[#3b3b5c] rounded-xl focus:ring-2 focus:ring-[#7471D9] focus:border-[#7471D9]"
+                />
+                <Search className="absolute top-1/2 right-4 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
               </div>
-            </header>
-            <div className="flex-1 flex flex-col md:flex-row gap-8 items-center justify-center mt-6">
-              <aside className="w-full md:w-56 flex-shrink-0">
-                <div className="flex flex-row md:flex-col gap-3 justify-center">
-                  {friends.map((f) => (
-                    <div
-                      key={f.id}
-                      onClick={() => handleSelectFriend(f)}
-                      className={`flex items-center gap-4 p-3 rounded-xl cursor-pointer hover:bg-[#303054] transition-all duration-200 ${
-                        selectedFriend?.id === f.id
-                          ? "bg-[#7471D9] text-white font-semibold"
-                          : "bg-[#282845]"
-                      }`}
-                    >
-                      <div className="w-8 h-8 rounded-full bg-indigo-500 flex-shrink-0" />
-                      <span className="truncate hidden md:inline">{f.name}</span>
-                    </div>
-                  ))}
+              <div className="relative -top-25 flex flex-row md:flex-col gap-3 justify-center">
+                {friends.map((f) => (
+                <div
+                  key={f.id}
+                  onClick={() => handleSelectFriend(f)}
+                  className={`flex items-center gap-4 p-3 rounded-xl cursor-pointer hover:bg-[#303054] transition-all duration-200 ${
+                  selectedFriend?.id === f.id
+                    ? "bg-[#7471D9] text-white font-semibold"
+                    : "bg-[#282845]"
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-full bg-indigo-500 flex-shrink-0" />
+                  <span className="truncate hidden md:inline">{f.name}</span>
                 </div>
+                ))}
+              </div>
               </aside>
-              <div className="flex-1 flex items-center justify-center w-full">
+              <div className="flex-1 flex items-center justify-center w-full -ml-65">
                 <div className="relative w-full max-w-xs h-[464px] flex items-center justify-center">
                   <FadedCard position="left" />
                   <FadedCard position="right" />
