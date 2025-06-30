@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, X as CloseIcon, Check, Swords, Users, Info } from "lucide-react";
 import MatchModal from "@/components/MatchModal";
+import MovieInfoModal from "@/components/MovieInfoModal";
 import Drawer from "@/components/DrawerLateral";
 import { useSession } from "next-auth/react";
 
@@ -28,6 +29,7 @@ export default function MatchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [matchedMovie, setMatchedMovie] = useState<Movie | null>(null);
+  const [movieInfoModal, setMovieInfoModal] = useState<Movie | null>(null);
   const [swipeDirection, setSwipeDirection] = useState<"left" | "right" | null>(null);
   const x = useMotionValue(0);
 
@@ -119,6 +121,17 @@ export default function MatchPage() {
     setMatchedMovie(null); setMatchSession(null); setSelectedFriend(null);
   };
 
+  const handleShowMovieInfo = () => {
+    if (matchSession && matchSession.movies.length > 0) {
+      const currentMovie = matchSession.movies[matchSession.currentMovieIndex];
+      setMovieInfoModal(currentMovie);
+    }
+  };
+
+  const handleCloseMovieInfoModal = () => {
+    setMovieInfoModal(null);
+  };
+
   const handleDragEnd = (_e: any, info: any) => {
     const threshold = 120;
     if (info.offset.x > threshold) handleSwipe("right");
@@ -161,6 +174,7 @@ export default function MatchPage() {
             </button>
           )}
           <MatchModal movie={matchedMovie} friendName={selectedFriend?.name || null} onClose={handleCloseMatchModal} />
+          <MovieInfoModal movie={movieInfoModal} onClose={handleCloseMovieInfoModal} />
           <div className="bg-[#1F1F26] rounded-2xl w-full p-6 md:p-8 flex flex-col min-h-full">
             <header className="text-center">
               <div className="flex justify-center items-center gap-3 mb-2">
@@ -258,7 +272,7 @@ export default function MatchPage() {
                               <CloseIcon className="w-6 h-6 text-white" />
                             </button>
                             <button
-                              onClick={() => alert("Mostre mais informações do filme aqui.")}
+                              onClick={handleShowMovieInfo}
                               className="w-14 h-14 rounded-full bg-gray-500/80 backdrop-blur-md hover:bg-gray-500 hover:scale-110 transition-all flex items-center justify-center border-2 border-white/10 shadow-md"
                               aria-label="Mais informações"
                             >
