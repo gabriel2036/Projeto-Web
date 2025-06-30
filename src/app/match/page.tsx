@@ -10,7 +10,7 @@ import MovieInfoModal from "@/components/MovieInfoModal";
 import Drawer from "@/components/DrawerLateral";
 import { useSession } from "next-auth/react";
 
-interface Movie { id: number; title: string; year: number; poster: string; overview: string; }
+interface Movie { id: number; title: string; year: number; poster: string; overview: string; originalId?: number; }
 interface Friend { id: number; name: string | null; }
 interface MatchSession { id: number; movies: Movie[]; currentMovieIndex: number; }
 
@@ -86,12 +86,14 @@ export default function MatchPage() {
       const moviesResponse = await fetch(`/api/match/${sessionId}`);
       if (!moviesResponse.ok) throw new Error("Falha ao carregar os filmes da sessão.");
       const moviesData = await moviesResponse.json();
+      
       const adaptedMovies: Movie[] = moviesData.map((movie: any) => ({
-        id: movie.id,
+        id: movie.id, // Este é o ID do TMDB para usar no modal
         title: movie.name || "Título Desconhecido",
         year: movie.year ? parseInt(movie.year, 10) : 0,
         poster: movie.imageUrl || FALLBACK_IMAGE_URL,
         overview: "Descrição não disponível.",
+        originalId: movie.originalId, // ID do banco para usar nos votos
       }));
       setMatchSession({ id: sessionId, movies: adaptedMovies, currentMovieIndex: 0 });
     } catch (err: any) {
@@ -110,7 +112,7 @@ export default function MatchPage() {
         await fetch(`/api/match/${matchSession.id}/vote`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ interestId: movieOnTop.id, action }),
+          body: JSON.stringify({ interestId: movieOnTop.originalId || movieOnTop.id, action }),
         });
       } catch (err) { console.error("Erro ao enviar voto:", err); }
     },

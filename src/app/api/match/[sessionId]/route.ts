@@ -7,6 +7,32 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
+// Função para buscar o ID do TMDB pelo nome do filme
+async function getTmdbIdByName(movieName: string): Promise<number | null> {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=pt-BR&query=${encodeURIComponent(movieName)}&include_adult=false`
+    );
+    
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    
+    // Retorna o ID do primeiro resultado (mais relevante)
+    if (data.results && data.results.length > 0) {
+      return data.results[0].id;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Erro ao buscar ID do TMDB:', error);
+    return null;
+  }
+}
+
 async function getCurrentUserId(session: any) {
   if (!session?.user?.email) return null;
   const currentUser = await prisma.user.findUnique({
@@ -69,7 +95,21 @@ export async function GET(
       },
     });
 
-    return NextResponse.json(commonMovies);
+    // Mapear os filmes para incluir o ID do TMDB
+    const moviesWithTmdbId = await Promise.all(
+      commonMovies.map(async (movie) => {
+        const tmdbId = await getTmdbIdByName(movie.name);
+        return {
+          id: tmdbId || movie.id, // Usa o ID do TMDB se encontrado, senão usa o ID do banco
+          name: movie.name,
+          imageUrl: movie.imageUrl,
+          tmdbId, // Campo adicional para debug
+          originalId: movie.id, // ID original do banco para referência
+        };
+      })
+    );
+
+    return NextResponse.json(moviesWithTmdbId);
 
   } catch (error) {
     console.error("Erro ao carregar sessão de match:", error);

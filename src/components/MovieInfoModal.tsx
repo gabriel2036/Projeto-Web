@@ -15,6 +15,7 @@ interface Movie {
   year: number;
   poster: string;
   overview: string;
+  originalId?: number;
 }
 
 interface MovieDetails extends Movie {
