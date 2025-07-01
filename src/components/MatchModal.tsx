@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
 
 interface Movie {
   id: number;
@@ -22,7 +21,6 @@ export default function MatchModal({ movie, friendName, onClose, onMarkAsWatched
     if (movie && onMarkAsWatched) {
       try {
         await onMarkAsWatched(movie.originalId || movie.id);
-        // Feedback visual pode ser adicionado aqui se necessário
         onClose();
       } catch (error) {
         console.error('Erro ao marcar filme como assistido:', error);
@@ -30,6 +28,7 @@ export default function MatchModal({ movie, friendName, onClose, onMarkAsWatched
       }
     }
   };
+
   return (
     <AnimatePresence>
       {movie && (
@@ -38,7 +37,6 @@ export default function MatchModal({ movie, friendName, onClose, onMarkAsWatched
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4"
-          onClick={onClose}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 30 }}
