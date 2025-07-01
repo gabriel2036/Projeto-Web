@@ -14,9 +14,22 @@ interface MatchModalProps {
   movie: Movie | null;
   friendName: string | null;
   onClose: () => void;
+  onMarkAsWatched?: (movieId: number) => void;
 }
 
-export default function MatchModal({ movie, friendName, onClose }: MatchModalProps) {
+export default function MatchModal({ movie, friendName, onClose, onMarkAsWatched }: MatchModalProps) {
+  const handleMarkAsWatched = async () => {
+    if (movie && onMarkAsWatched) {
+      try {
+        await onMarkAsWatched(movie.originalId || movie.id);
+        // Feedback visual pode ser adicionado aqui se necessário
+        onClose();
+      } catch (error) {
+        console.error('Erro ao marcar filme como assistido:', error);
+        // Aqui poderia mostrar uma mensagem de erro para o usuário
+      }
+    }
+  };
   return (
     <AnimatePresence>
       {movie && (
@@ -55,7 +68,10 @@ export default function MatchModal({ movie, friendName, onClose }: MatchModalPro
               </div>
 
               <h3 className="text-2xl font-bold text-white mb-2">{movie.title}</h3>
-              <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-xl transition-all">
+              <button 
+                onClick={handleMarkAsWatched}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-xl transition-all"
+              >
                 Marque como Assistido
               </button>
             </div>

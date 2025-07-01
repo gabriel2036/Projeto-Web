@@ -134,6 +134,27 @@ export default function MatchPage() {
     setMovieInfoModal(null);
   };
 
+  const handleMarkAsWatched = async (movieId: number) => {
+    try {
+      const response = await fetch(`/api/interests/${movieId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        console.log('✅ Filme marcado como assistido e removido dos interesses');
+        // Opcionalmente, você pode atualizar o estado local aqui
+        // Por exemplo, remover o filme da lista de filmes em comum se necessário
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Erro ao remover filme dos interesses:', errorData.error);
+        throw new Error(errorData.error || 'Erro ao remover filme');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao remover filme dos interesses:', error);
+      throw error; // Re-throw para que o MatchModal possa capturar o erro
+    }
+  };
+
   const handleDragEnd = (_e: any, info: any) => {
     const threshold = 120;
     if (info.offset.x > threshold) handleSwipe("right");
@@ -175,7 +196,7 @@ export default function MatchPage() {
               <img src="/sino.png" alt="Abrir menu" className="w-8 h-8" />
             </button>
           )}
-          <MatchModal movie={matchedMovie} friendName={selectedFriend?.name || null} onClose={handleCloseMatchModal} />
+          <MatchModal movie={matchedMovie} friendName={selectedFriend?.name || null} onClose={handleCloseMatchModal} onMarkAsWatched={handleMarkAsWatched} />
           <MovieInfoModal movie={movieInfoModal} onClose={handleCloseMovieInfoModal} />
           <div className="bg-[#1F1F26] rounded-2xl w-full p-6 md:p-8 flex flex-col min-h-full">
             <header className="text-center">
